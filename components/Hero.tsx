@@ -43,22 +43,24 @@ export default function Hero({
             alt=""
             className={`h-full w-full object-cover ${i === idx ? "animate-kenburns" : ""}`}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/45 to-ink/55" />
+          {/* Darken baked-in foreign marketing copy on legacy banner art */}
+          <div className="absolute inset-0 bg-gradient-to-r from-ink/92 via-ink/70 to-ink/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/35 to-ink/50" />
         </div>
       ))}
 
       <div className="relative z-10 h-full flex items-center">
         <div className="mx-auto max-w-[1280px] w-full px-5 lg:px-8">
           <div className="max-w-2xl">
-            <div key={idx} className="animate-fade-up">
+            <div key={`${idx}-${lang}`} className="animate-fade-up">
               <div className="flex items-center gap-4 mb-6">
                 <span className="gold-rule !w-12" />
                 <span className="eyebrow !text-gold-soft">{t.heroTag}</span>
               </div>
-              <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl leading-[1.1] text-paper">
+              <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl leading-[1.1] text-paper drop-shadow-[0_2px_12px_rgba(0,0,0,0.55)]">
                 {tr(current.headline, lang)}
               </h1>
-              <p className="mt-6 text-lg text-ivory/75 font-light leading-relaxed">
+              <p className="mt-6 text-lg text-ivory/85 font-light leading-relaxed drop-shadow-[0_1px_8px_rgba(0,0,0,0.45)]">
                 {tr(current.sub, lang)}
               </p>
             </div>

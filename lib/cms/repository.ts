@@ -20,6 +20,7 @@ import type {
 } from "./types";
 import type { Localized } from "../i18n";
 import { coinjshtPosts } from "../coinjsht-seed";
+import { mediaUrl, mediaUrls } from "../media-url";
 import { virtualCommentCount } from "./virtual-comments";
 
 export const revalidateSeconds = 300;
@@ -29,14 +30,23 @@ const SEED_POST_IMAGES = new Map(
   coinjshtPosts.map((p) => [p.id, p.images] as const)
 );
 
-function withPostImages<T extends { id: string; image: string; images?: string[] }>(
+function withPostImages<T extends { id: string; image: string; images?: string[]; avatar?: string }>(
   post: T
 ): T {
-  if (post.images && post.images.length > 0) return post;
-  const fromSeed = SEED_POST_IMAGES.get(post.id);
-  if (fromSeed?.length) return { ...post, images: fromSeed, image: post.image || fromSeed[0] };
-  if (post.image) return { ...post, images: [post.image] };
-  return { ...post, images: [] };
+  let images = post.images && post.images.length > 0 ? post.images : undefined;
+  if (!images) {
+    const fromSeed = SEED_POST_IMAGES.get(post.id);
+    if (fromSeed?.length) images = fromSeed;
+    else if (post.image) images = [post.image];
+    else images = [];
+  }
+  const image = mediaUrl(post.image || images[0] || "");
+  return {
+    ...post,
+    image,
+    images: mediaUrls(images),
+    ...(post.avatar != null ? { avatar: mediaUrl(post.avatar) } : {}),
+  };
 }
 
 function ensureStore(): CmsStore {
@@ -58,8 +68,8 @@ function toProduct(p: ProductRecord): Product {
     description: p.description,
     estimate: p.estimate,
     lotNo: p.lotNo,
-    image: p.image,
-    gallery: p.gallery,
+    image: mediaUrl(p.image),
+    gallery: mediaUrls(p.gallery),
     specs: p.specs,
     featured: p.featured,
     status: p.status,
@@ -327,7 +337,7 @@ export async function getHeroBanners(): Promise<Banner[]> {
     .map((b) =>
       withHeroLink({
         id: b.id,
-        image: b.image,
+        image: mediaUrl(b.image),
         headline: b.headline,
         sub: b.sub,
         linkSlug: b.linkSlug || "",
@@ -700,7 +710,7 @@ function mapPostRow(row: Record<string, unknown>): Post {
 function mapBannerRow(row: Record<string, unknown>): Banner {
   return {
     id: String(row.id),
-    image: String(row.image),
+    image: mediaUrl(String(row.image || "")),
     headline: { cn: row.headline_cn, zh: row.headline_zh, en: row.headline_en } as Localized,
     sub: { cn: row.sub_cn, zh: row.sub_zh, en: row.sub_en } as Localized,
     linkSlug: String(row.link_slug || ""),
