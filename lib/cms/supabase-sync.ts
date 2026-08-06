@@ -48,6 +48,8 @@ export async function syncSiteSettings(settings: SiteSettings): Promise<void> {
     address_cn: settings.address.cn,
     address_zh: settings.address.zh,
     address_en: settings.address.en,
+    comments_enabled: settings.commentsEnabled,
+    likes_enabled: settings.likesEnabled,
     updated_at: new Date().toISOString(),
   });
 }
@@ -132,7 +134,9 @@ export async function deleteArticleRemote(id: string): Promise<void> {
 export async function syncPost(post: PostRecord): Promise<void> {
   if (!isSupabaseConfigured()) return;
   const sb = createServiceClient();
-  await sb.from("posts").upsert({
+  const images =
+    post.images?.length > 0 ? post.images : post.image ? [post.image] : [];
+  const base = {
     id: post.id,
     author_cn: post.author.cn,
     author_zh: post.author.zh,
@@ -141,14 +145,18 @@ export async function syncPost(post: PostRecord): Promise<void> {
     content_cn: post.content.cn,
     content_zh: post.content.zh,
     content_en: post.content.en,
-    image: post.image,
+    image: post.image || images[0] || "",
     published_at: post.date,
     likes: post.likes,
     views: post.views,
-    comments: post.comments,
+    comments: [],
+    comment_count: post.commentCount ?? 0,
     active: post.active,
     sort_order: post.sortOrder,
-  });
+  };
+  const { error } = await sb.from("posts").upsert({ ...base, images });
+  // Fallback if migration 006 (images column) not applied yet
+  if (error) await sb.from("posts").upsert(base);
 }
 
 export async function deletePostRemote(id: string): Promise<void> {
@@ -175,7 +183,8 @@ export async function deleteMarqueeRemote(id: string): Promise<void> {
 
 export async function syncBanner(banner: BannerRecord): Promise<void> {
   if (!isSupabaseConfigured()) return;
-  await createServiceClient().from("banners").upsert({
+  const sb = createServiceClient();
+  const base = {
     id: banner.id,
     image: banner.image,
     headline_cn: banner.headline.cn,
@@ -187,7 +196,10 @@ export async function syncBanner(banner: BannerRecord): Promise<void> {
     category: banner.category,
     active: banner.active,
     sort_order: banner.sortOrder,
-  });
+  };
+  const withLink = { ...base, link_slug: banner.linkSlug || "" };
+  const { error } = await sb.from("banners").upsert(withLink);
+  if (error) await sb.from("banners").upsert(base);
 }
 
 export async function deleteBannerRemote(id: string): Promise<void> {

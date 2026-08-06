@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import PriceTrend from "@/components/PriceTrend";
+import ProductGallery from "@/components/ProductGallery";
 import {
   getPriceHistory,
   getProductBySlug,
   getProducts,
+  getSiteSettings,
 } from "@/lib/cms/repository";
 import { dict, isLocale, tr, type Locale } from "@/lib/i18n";
 
@@ -27,11 +29,18 @@ export default async function ProductDetail({
   const product = await getProductBySlug(slug);
   if (!product) notFound();
 
-  const [allProducts, history] = await Promise.all([
+  const [allProducts, history, settings] = await Promise.all([
     getProducts(),
     getPriceHistory(product.id),
+    getSiteSettings(),
   ]);
   const related = allProducts.filter((p) => p.id !== product.id).slice(0, 3);
+  const wa = settings.whatsappNumber.replace(/\D/g, "");
+  const inquireHref = wa
+    ? `https://wa.me/${wa}?text=${encodeURIComponent(
+        `${lang === "en" ? "Enquiry about" : "咨询藏品"}: ${tr(product.title, lang)} (${product.slug})`
+      )}`
+    : `/${lang}/about`;
 
   const statusLabel: Record<
     string,
@@ -49,24 +58,11 @@ export default async function ProductDetail({
       <div className="pt-[var(--nav-h)] bg-ink" />
       <section className="bg-ink text-paper">
         <div className="mx-auto max-w-[1280px] px-5 lg:px-8 py-14 grid lg:grid-cols-2 gap-12">
-          <div>
-            <div className="aspect-[4/5] overflow-hidden bg-ink-soft/30">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={product.image}
-                alt={tr(product.title, lang)}
-                className="h-full w-full object-cover"
-              />
-            </div>
-            <div className="mt-4 grid grid-cols-3 gap-4">
-              {product.gallery.map((g, i) => (
-                <div key={i} className="aspect-square overflow-hidden bg-ink-soft/30">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={g} alt="" className="h-full w-full object-cover" />
-                </div>
-              ))}
-            </div>
-          </div>
+          <ProductGallery
+            title={tr(product.title, lang)}
+            image={product.image}
+            gallery={product.gallery}
+          />
 
           <div className="flex flex-col justify-center">
             <Link
@@ -121,12 +117,14 @@ export default async function ProductDetail({
             </dl>
 
             <div className="mt-10">
-              <Link
-                href={`/${lang}/contact?lot=${product.slug}`}
+              <a
+                href={inquireHref}
+                target={wa ? "_blank" : undefined}
+                rel={wa ? "noopener noreferrer" : undefined}
                 className="btn-gold !border-gold-soft !text-paper hover:!bg-gold hover:!text-ink"
               >
                 {t.common.inquire}
-              </Link>
+              </a>
             </div>
           </div>
         </div>

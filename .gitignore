@@ -47,3 +47,5 @@ next-env.d.ts
 # scrape / temp dumps
 tmp-*.html
 tmp-*.json
+
+.vercel

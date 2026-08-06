@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { PageBanner } from "@/components/ui";
 import SocialFeed from "@/components/SocialFeed";
-import { getPosts } from "@/lib/cms/repository";
+import { getPosts, getSiteSettings } from "@/lib/cms/repository";
 import { dict, isLocale, type Locale } from "@/lib/i18n";
 
 export const revalidate = 300;
@@ -15,7 +15,7 @@ export default async function PostsPage({
   if (!isLocale(raw)) notFound();
   const lang = raw as Locale;
   const t = dict[lang];
-  const posts = await getPosts();
+  const [posts, settings] = await Promise.all([getPosts(), getSiteSettings()]);
 
   return (
     <>
@@ -26,7 +26,12 @@ export default async function PostsPage({
       />
       <section className="py-20 bg-ivory">
         <div className="mx-auto max-w-[1180px] px-5 lg:px-8">
-          <SocialFeed posts={posts} lang={lang} />
+          <SocialFeed
+            posts={posts}
+            lang={lang}
+            commentsEnabled={settings.commentsEnabled}
+            likesEnabled={settings.likesEnabled}
+          />
         </div>
       </section>
     </>

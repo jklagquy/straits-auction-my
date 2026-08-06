@@ -16,21 +16,27 @@ function normalizeStore(raw: CmsStore): CmsStore {
     company?: CmsStore["siteSettings"]["company"];
   };
   if (!s.brandSub) {
-    s.brandSub = {
-      cn: "Straits Scholar's Auction",
-      zh: "Straits Scholar's Auction",
-      en: "Straits Scholar's Auction",
-    };
+    s.brandSub = { cn: "WACA", zh: "WACA", en: "WACA" };
   }
   if (s.logoUrl == null) s.logoUrl = "";
   if (!s.company) {
     s.company = {
-      cn: "海峡金石拍卖有限公司",
-      zh: "海峽金石拍賣有限公司",
-      en: "Straits Scholar's Auction Sdn. Bhd.",
+      cn: "万国古董文博协会",
+      zh: "萬國古董文博協會",
+      en: "World Antique Cultural-Heritage Association",
     };
   }
+  if (s.commentsEnabled == null) s.commentsEnabled = true;
+  if (s.likesEnabled == null) s.likesEnabled = true;
   raw.siteSettings = s;
+  for (const p of raw.posts || []) {
+    if (p.commentCount == null) {
+      p.commentCount = Array.isArray(p.comments) ? p.comments.length : 0;
+    }
+  }
+  for (const b of raw.banners || []) {
+    if (b.linkSlug == null) b.linkSlug = "";
+  }
   return raw;
 }
 
@@ -43,9 +49,14 @@ export function readStore(): CmsStore | null {
   }
 }
 
+/** Best-effort write — never throw on read-only hosts (Vercel /var/task). */
 export function writeStore(store: CmsStore): void {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-  fs.writeFileSync(STORE_PATH, JSON.stringify(store, null, 2), "utf8");
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(STORE_PATH, JSON.stringify(store, null, 2), "utf8");
+  } catch {
+    // Serverless / read-only filesystem — ignore
+  }
 }
 
 export function isFileStoreReady(): boolean {

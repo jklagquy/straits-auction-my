@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAdminPage } from "@/lib/admin-guard";
 import { loadAdminStore } from "@/lib/cms/repository";
+import { getCommentCount } from "@/lib/cms/comment-store";
 import { savePostAction } from "../../actions";
 import MediaUploader from "@/components/admin/MediaUploader";
 
@@ -20,22 +22,43 @@ export default async function AdminPostEditPage({
         avatar: "",
         content: { cn: "", zh: "", en: "" },
         image: "",
+        images: [],
         date: new Date().toISOString().slice(0, 10),
         likes: 0,
         views: 0,
+        commentCount: 0,
         comments: [],
         active: true,
         sortOrder: 0,
       }
     : store.posts.find((p) => p.id === id);
   if (!post) notFound();
+  const commentCount = isNew ? 0 : await getCommentCount(post.id);
+  const imagesText = (post.images?.length ? post.images : post.image ? [post.image] : []).join(
+    "\n"
+  );
 
   return (
     <div className="max-w-3xl space-y-6">
-      <h1 className="text-2xl font-bold">{isNew ? "新建动态" : "编辑动态"}</h1>
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-2xl font-bold">{isNew ? "新建动态" : "编辑动态"}</h1>
+        {!isNew && (
+          <Link
+            href={`/admin/posts/${post.id}/comments`}
+            className="text-sm rounded-lg border px-3 py-2 hover:bg-zinc-50"
+          >
+            管理评论（{commentCount}）
+          </Link>
+        )}
+      </div>
       <form action={savePostAction} className="space-y-4 rounded-xl border bg-white p-6">
         <input type="hidden" name="id" value={post.id} />
-        <MediaUploader name="image" defaultValue={post.image} folder="posts" label="配图" />
+        <MediaUploader name="image" defaultValue={post.image} folder="posts" label="封面图（列表用）" />
+        <Area
+          name="images"
+          label="多图相册（每行一个图片 URL，详情页九宫格）"
+          defaultValue={imagesText}
+        />
         <MediaUploader name="avatar" defaultValue={post.avatar} folder="avatars" label="头像" />
         <Field name="date" label="日期" type="date" defaultValue={post.date} />
         <Field name="author_cn" label="作者（简）" defaultValue={post.author.cn} />
@@ -66,11 +89,26 @@ function Field({ name, label, defaultValue, type = "text" }: { name: string; lab
   );
 }
 
-function Area({ name, label, defaultValue }: { name: string; label: string; defaultValue?: string }) {
+function Area({
+  name,
+  label,
+  defaultValue,
+  rows = 4,
+}: {
+  name: string;
+  label: string;
+  defaultValue?: string;
+  rows?: number;
+}) {
   return (
     <div>
       <label className="text-xs text-zinc-500 block mb-1">{label}</label>
-      <textarea name={name} rows={4} defaultValue={defaultValue} className="w-full border rounded px-3 py-2 text-sm" />
+      <textarea
+        name={name}
+        rows={name === "images" ? 8 : rows}
+        defaultValue={defaultValue}
+        className="w-full border rounded px-3 py-2 text-sm font-mono"
+      />
     </div>
   );
 }

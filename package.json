@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "supabase:setup": "tsx scripts/supabase-setup.ts"
+    "supabase:setup": "tsx scripts/supabase-setup.ts",
+    "seed:comments": "tsx scripts/seed-comments.ts",
+    "seed:comments:lite": "tsx scripts/seed-comments.ts --lite"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.3",

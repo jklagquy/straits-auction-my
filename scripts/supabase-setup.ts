@@ -38,45 +38,74 @@ async function main() {
     process.exit(1);
   }
 
+  const fresh = buildDefaultStore();
+  let store = fresh;
   const storePath = resolve(process.cwd(), ".data/cms-store.json");
-  let store = buildDefaultStore();
   if (existsSync(storePath)) {
     const local = JSON.parse(readFileSync(storePath, "utf8")) as typeof store;
-    // Shallow merge would drop new siteSettings fields (logo/brandSub/company)
+    // Keep local site settings / banners, but always refresh products + lifestyle posts
     store = {
-      ...store,
+      ...fresh,
       ...local,
+      products: fresh.products,
+      posts: fresh.posts,
       siteSettings: {
-        ...store.siteSettings,
+        ...fresh.siteSettings,
         ...(local.siteSettings || {}),
-        brand: { ...store.siteSettings.brand, ...(local.siteSettings?.brand || {}) },
+        brand: { ...fresh.siteSettings.brand, ...(local.siteSettings?.brand || {}) },
         brandSub: {
-          ...store.siteSettings.brandSub,
+          ...fresh.siteSettings.brandSub,
           ...(local.siteSettings?.brandSub || {}),
         },
         company: {
-          ...store.siteSettings.company,
+          ...fresh.siteSettings.company,
           ...(local.siteSettings?.company || {}),
         },
         address: {
-          ...store.siteSettings.address,
+          ...fresh.siteSettings.address,
           ...(local.siteSettings?.address || {}),
         },
-        logoUrl: local.siteSettings?.logoUrl ?? store.siteSettings.logoUrl,
+        logoUrl: local.siteSettings?.logoUrl ?? fresh.siteSettings.logoUrl,
       },
     };
-    console.log("📂 合并本地 .data/cms-store.json 数据");
+    console.log("📂 合并本地设置；products/posts 使用最新 coinjsht 种子");
   } else {
-    console.log("📦 使用默认种子数据（18 件拍品 + 新闻/帖子/跑马灯）");
+    console.log("📦 使用默认种子（coinjsht 藏品 + 生活向藏家动态）");
   }
 
+  console.log(
+    "ℹ️  若动态多图未写入，请先在 SQL Editor 运行 supabase/migrations/006_post_images.sql"
+  );
   console.log("⬆️  正在写入 Supabase …");
   await seedFullStore(store);
 
-  const { count } = await sb
+  // Remove obsolete catalogue rows not in the new seed
+  const keepProductIds = store.products.map((p) => p.id);
+  const keepPostIds = store.posts.map((p) => p.id);
+  const { data: remoteProducts } = await sb.from("products").select("id");
+  const staleProducts = (remoteProducts || [])
+    .map((r) => r.id as string)
+    .filter((id) => !keepProductIds.includes(id));
+  if (staleProducts.length) {
+    await sb.from("products").delete().in("id", staleProducts);
+    console.log(`🗑️  删除旧藏品 ${staleProducts.length} 条`);
+  }
+  const { data: remotePosts } = await sb.from("posts").select("id");
+  const stalePosts = (remotePosts || [])
+    .map((r) => r.id as string)
+    .filter((id) => !keepPostIds.includes(id));
+  if (stalePosts.length) {
+    await sb.from("posts").delete().in("id", stalePosts);
+    console.log(`🗑️  删除旧动态 ${stalePosts.length} 条`);
+  }
+
+  const { count: pCount } = await sb
     .from("products")
     .select("*", { count: "exact", head: true });
-  console.log(`✅ 完成！products 表共 ${count ?? 0} 条记录`);
+  const { count: postCount } = await sb
+    .from("posts")
+    .select("*", { count: "exact", head: true });
+  console.log(`✅ 完成！products=${pCount ?? 0}  posts=${postCount ?? 0}`);
   console.log(`   项目: ${url}`);
 }
 

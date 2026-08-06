@@ -28,7 +28,7 @@ export default async function AdminLayout({
       <header className="border-b bg-white">
         <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between gap-4">
           <div className="font-semibold tracking-wide">
-            {"\u6D77\u5CE1\u91D1\u77F3 \u00B7 \u7BA1\u7406\u540E\u53F0"}
+            {"\u4E07\u56FD\u6587\u535A\u534F\u4F1A \u00B7 WACA \u540E\u53F0"}
           </div>
           <nav className="hidden lg:flex flex-wrap gap-3 text-sm">
             {nav.map((n) => (

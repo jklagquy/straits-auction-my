@@ -19,15 +19,32 @@ import type {
   SaleSessionRecord,
 } from "./types";
 import type { Localized } from "../i18n";
+import { coinjshtPosts } from "../coinjsht-seed";
+import { virtualCommentCount } from "./virtual-comments";
 
 export const revalidateSeconds = 300;
 
+/** Until migration 006, Supabase may lack posts.images — fall back to seed galleries. */
+const SEED_POST_IMAGES = new Map(
+  coinjshtPosts.map((p) => [p.id, p.images] as const)
+);
+
+function withPostImages<T extends { id: string; image: string; images?: string[] }>(
+  post: T
+): T {
+  if (post.images && post.images.length > 0) return post;
+  const fromSeed = SEED_POST_IMAGES.get(post.id);
+  if (fromSeed?.length) return { ...post, images: fromSeed, image: post.image || fromSeed[0] };
+  if (post.image) return { ...post, images: [post.image] };
+  return { ...post, images: [] };
+}
+
 function ensureStore(): CmsStore {
-  let store = readStore();
-  if (!store) {
-    store = buildDefaultStore();
-    writeStore(store);
-  }
+  const existing = readStore();
+  if (existing) return existing;
+  const store = buildDefaultStore();
+  // Best-effort persist for local dev; never required on Vercel
+  writeStore(store);
   return store;
 }
 
@@ -105,6 +122,9 @@ function mapSiteSettingsRow(data: Record<string, unknown>): SiteSettings {
       zh: String(data.address_zh || ""),
       en: String(data.address_en || ""),
     },
+    commentsEnabled:
+      data.comments_enabled == null ? true : Boolean(data.comments_enabled),
+    likesEnabled: data.likes_enabled == null ? true : Boolean(data.likes_enabled),
   };
 }
 
@@ -198,22 +218,58 @@ export async function getPosts(): Promise<Post[]> {
       .select("*")
       .eq("active", true)
       .order("sort_order");
-    if (data?.length) return data.map(mapPostRow);
+    if (data?.length) return data.map((row) => withPostImages(mapPostRow(row)));
   }
   return ensureStore()
     .posts.filter((p) => p.active)
     .sort((a, b) => a.sortOrder - b.sortOrder)
-    .map((p) => ({
-      id: p.id,
-      author: p.author,
-      avatar: p.avatar,
-      content: p.content,
-      image: p.image,
-      date: p.date,
-      likes: p.likes,
-      views: p.views,
-      comments: p.comments,
-    }));
+    .map((p) =>
+      withPostImages({
+        id: p.id,
+        author: p.author,
+        avatar: p.avatar,
+        content: p.content,
+        image: p.image,
+        images: p.images?.length ? p.images : p.image ? [p.image] : [],
+        date: p.date,
+        likes: p.likes,
+        views: p.views,
+        commentCount: resolveCommentCount(p.id, p.commentCount ?? p.comments?.length ?? 0),
+        comments: [],
+      })
+    );
+}
+
+export async function getPostById(id: string): Promise<Post | null> {
+  if (isSupabaseConfigured()) {
+    const sb = createServiceClient();
+    const { data } = await sb
+      .from("posts")
+      .select("*")
+      .eq("id", id)
+      .eq("active", true)
+      .maybeSingle();
+    if (data) return withPostImages(mapPostRow(data as Record<string, unknown>));
+  }
+  const p = ensureStore().posts.find((x) => x.id === id && x.active);
+  if (!p) return null;
+  return withPostImages({
+    id: p.id,
+    author: p.author,
+    avatar: p.avatar,
+    content: p.content,
+    image: p.image,
+    images: p.images?.length ? p.images : p.image ? [p.image] : [],
+    date: p.date,
+    likes: p.likes,
+    views: p.views,
+    commentCount: resolveCommentCount(p.id, p.commentCount ?? p.comments?.length ?? 0),
+    comments: [],
+  });
+}
+
+function resolveCommentCount(postId: string, stored: number): number {
+  return stored > 0 ? stored : virtualCommentCount(postId);
 }
 
 export async function getMarqueeMessages(): Promise<Localized[]> {
@@ -234,6 +290,26 @@ export async function getMarqueeMessages(): Promise<Localized[]> {
     .map((m) => m.text);
 }
 
+const HERO_LINK_BY_IMAGE: Record<string, string> = {
+  "/products/ss-03.jpg": "tianhuang-seal",
+  "/products/ss-17.png": "wulong-tianhuang-yuxi",
+  "/products/my-nyonya.jpg": "nyonya-ware",
+  "/products/my-keris.jpg": "malay-keris",
+  "/products/hero-main.jpg": "tianhuang-seal",
+  "/products/banner-h01.png": "tianhuang-jipin-limited",
+  "/products/banner-h02.jpg": "tianhuang-jipin-limited",
+  "/products/banner-h03.jpg": "shoushan-chicken-blood",
+  "/products/banner-h04.jpg": "wulong-tianhuang-yuxi",
+  "/products/banner-h05.jpg": "tianhuang-mid-grade",
+  "/products/ss-41-cover.jpg": "tianhuang-jipin-limited",
+  "/products/ss-21.png": "shoushan-chicken-blood",
+};
+
+function withHeroLink(b: Banner): Banner {
+  if (b.linkSlug) return b;
+  return { ...b, linkSlug: HERO_LINK_BY_IMAGE[b.image] || "" };
+}
+
 export async function getHeroBanners(): Promise<Banner[]> {
   if (isSupabaseConfigured()) {
     const sb = createServiceClient();
@@ -243,17 +319,20 @@ export async function getHeroBanners(): Promise<Banner[]> {
       .eq("active", true)
       .eq("category", "hero")
       .order("sort_order");
-    if (data?.length) return data.map(mapBannerRow);
+    if (data?.length) return data.map((row) => withHeroLink(mapBannerRow(row as Record<string, unknown>)));
   }
   return ensureStore()
     .banners.filter((b) => b.active && b.category === "hero")
     .sort((a, b) => a.sortOrder - b.sortOrder)
-    .map((b) => ({
-      id: b.id,
-      image: b.image,
-      headline: b.headline,
-      sub: b.sub,
-    }));
+    .map((b) =>
+      withHeroLink({
+        id: b.id,
+        image: b.image,
+        headline: b.headline,
+        sub: b.sub,
+        linkSlug: b.linkSlug || "",
+      })
+    );
 }
 
 export async function getNewsBanners(): Promise<{ image: string }[]> {
@@ -430,6 +509,7 @@ export async function loadAdminStore(): Promise<CmsStore> {
       zh: String(row.sub_zh || ""),
       en: String(row.sub_en || ""),
     },
+    linkSlug: String((row as { link_slug?: string }).link_slug || ""),
     category: (row.category === "news" ? "news" : "hero") as "hero" | "news",
     active: Boolean(row.active),
     sortOrder: Number(row.sort_order),
@@ -518,6 +598,12 @@ function mapArticleRecord(row: Record<string, unknown>): ArticleRecord {
 }
 
 function mapPostRecord(row: Record<string, unknown>): PostRecord {
+  const legacyComments = (row.comments as PostRecord["comments"]) || [];
+  const images = Array.isArray(row.images)
+    ? (row.images as string[])
+    : row.image
+      ? [String(row.image)]
+      : [];
   return {
     id: String(row.id),
     author: { cn: String(row.author_cn), zh: String(row.author_zh), en: String(row.author_en) },
@@ -527,11 +613,18 @@ function mapPostRecord(row: Record<string, unknown>): PostRecord {
       zh: String(row.content_zh),
       en: String(row.content_en),
     },
-    image: String(row.image || ""),
+    image: String(row.image || images[0] || ""),
+    images,
     date: String(row.published_at || "").slice(0, 10),
     likes: Number(row.likes || 0),
     views: Number(row.views || 0),
-    comments: (row.comments as PostRecord["comments"]) || [],
+    commentCount: resolveCommentCount(
+      String(row.id),
+      row.comment_count != null
+        ? Number(row.comment_count)
+        : legacyComments.length
+    ),
+    comments: [],
     active: Boolean(row.active),
     sortOrder: Number(row.sort_order || 0),
   };
@@ -580,16 +673,27 @@ function mapArticleRow(row: Record<string, unknown>): Article {
 }
 
 function mapPostRow(row: Record<string, unknown>): Post {
+  const legacy = (row.comments as Post["comments"]) || [];
+  const images = Array.isArray(row.images)
+    ? (row.images as string[])
+    : row.image
+      ? [String(row.image)]
+      : [];
   return {
     id: String(row.id),
     author: { cn: row.author_cn, zh: row.author_zh, en: row.author_en } as Localized,
     avatar: String(row.avatar || ""),
     content: { cn: row.content_cn, zh: row.content_zh, en: row.content_en } as Localized,
-    image: String(row.image || ""),
+    image: String(row.image || images[0] || ""),
+    images,
     date: String(row.published_at).slice(0, 10),
     likes: Number(row.likes),
     views: Number(row.views),
-    comments: (row.comments as Post["comments"]) || [],
+    commentCount: resolveCommentCount(
+      String(row.id),
+      row.comment_count != null ? Number(row.comment_count) : legacy.length
+    ),
+    comments: [],
   };
 }
 
@@ -599,6 +703,7 @@ function mapBannerRow(row: Record<string, unknown>): Banner {
     image: String(row.image),
     headline: { cn: row.headline_cn, zh: row.headline_zh, en: row.headline_en } as Localized,
     sub: { cn: row.sub_cn, zh: row.sub_zh, en: row.sub_en } as Localized,
+    linkSlug: String(row.link_slug || ""),
   };
 }
 

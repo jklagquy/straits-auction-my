@@ -39,6 +39,11 @@ import type {
 } from "@/lib/cms/types";
 import { enrichProduct } from "@/lib/cms/pricing";
 import { isSupabaseConfigured } from "@/lib/cms/supabase";
+import {
+  deleteComment,
+  getCommentCount,
+  upsertComment,
+} from "@/lib/cms/comment-store";
 
 async function requireAdmin() {
   if (!(await isAdminAuthenticated())) redirect("/admin/login");
@@ -112,6 +117,8 @@ export async function saveSiteSettingsAction(formData: FormData) {
       zh: String(formData.get("addr_zh") || ""),
       en: String(formData.get("addr_en") || ""),
     },
+    commentsEnabled: formData.get("comments_enabled") === "on",
+    likesEnabled: formData.get("likes_enabled") === "on",
   };
   if (!isSupabaseConfigured()) saveAdminStore(store);
   await syncSiteSettings(store.siteSettings);
@@ -329,9 +336,11 @@ export async function savePostAction(formData: FormData) {
       avatar: "",
       content: emptyL(),
       image: "",
+      images: [],
       date: new Date().toISOString().slice(0, 10),
       likes: 0,
       views: 0,
+      commentCount: 0,
       comments: [],
       active: true,
       sortOrder: store.posts.length,
@@ -350,10 +359,18 @@ export async function savePostAction(formData: FormData) {
   };
   post.avatar = String(formData.get("avatar") || "");
   post.image = String(formData.get("image") || "");
+  const imagesRaw = String(formData.get("images") || "");
+  const images = imagesRaw
+    .split(/[\n,]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  post.images = images.length ? images : post.image ? [post.image] : [];
+  if (!post.image && post.images[0]) post.image = post.images[0];
   post.date = String(formData.get("date") || post.date);
   post.likes = Number(formData.get("likes") || post.likes);
   post.views = Number(formData.get("views") || post.views);
   post.active = formData.get("active") === "on";
+  post.commentCount = await getCommentCount(id);
   if (!isSupabaseConfigured()) saveAdminStore(store);
   await syncPost(post as PostRecord);
   revalidatePublic();
@@ -368,6 +385,42 @@ export async function deletePostAction(formData: FormData) {
   if (!isSupabaseConfigured()) saveAdminStore(store);
   await deletePostRemote(id);
   revalidatePublic();
+}
+
+export async function savePostCommentAction(formData: FormData) {
+  await requireAdmin();
+  const postId = String(formData.get("post_id") || "");
+  const id = String(formData.get("id") || crypto.randomUUID());
+  const user = String(formData.get("user") || "").trim();
+  const text = String(formData.get("text") || "").trim();
+  const langTag = String(formData.get("lang_tag") || "my");
+  if (!postId || !user || !text) redirect(`/admin/posts/${postId}/comments`);
+  await upsertComment({ id, postId, user, text, langTag });
+  const store = await loadAdminStore();
+  const post = store.posts.find((p) => p.id === postId);
+  if (post) {
+    post.commentCount = await getCommentCount(postId);
+    if (!isSupabaseConfigured()) saveAdminStore(store);
+    await syncPost(post as PostRecord);
+  }
+  revalidatePublic();
+  redirect(`/admin/posts/${postId}/comments`);
+}
+
+export async function deletePostCommentAction(formData: FormData) {
+  await requireAdmin();
+  const postId = String(formData.get("post_id") || "");
+  const id = String(formData.get("id") || "");
+  await deleteComment(postId, id);
+  const store = await loadAdminStore();
+  const post = store.posts.find((p) => p.id === postId);
+  if (post) {
+    post.commentCount = await getCommentCount(postId);
+    if (!isSupabaseConfigured()) saveAdminStore(store);
+    await syncPost(post as PostRecord);
+  }
+  revalidatePublic();
+  redirect(`/admin/posts/${postId}/comments`);
 }
 
 export async function saveMarqueeAction(formData: FormData) {
@@ -417,6 +470,7 @@ export async function saveBannerAction(formData: FormData) {
       image: "",
       headline: emptyL(),
       sub: emptyL(),
+      linkSlug: "",
       category: "hero",
       active: true,
       sortOrder: store.banners.length,
@@ -434,6 +488,7 @@ export async function saveBannerAction(formData: FormData) {
     zh: String(formData.get("sub_zh") || ""),
     en: String(formData.get("sub_en") || ""),
   };
+  banner.linkSlug = String(formData.get("link_slug") || "").trim();
   banner.category =
     formData.get("category") === "news" ? "news" : "hero";
   banner.active = formData.get("active") === "on";

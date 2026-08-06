@@ -24,6 +24,17 @@ export type SiteSettings = {
   contactEmail: string;
   contactPhone: string;
   address: Localized;
+  /** When false, main-site comment clicks show member-only prompt */
+  commentsEnabled: boolean;
+  /** When false, main-site like clicks show member-only prompt */
+  likesEnabled: boolean;
+};
+
+export type PostComment = {
+  id: string;
+  user: string;
+  text: string;
+  langTag?: string;
 };
 
 export type ProductRecord = {
@@ -75,10 +86,15 @@ export type PostRecord = {
   avatar: string;
   content: Localized;
   image: string;
+  /** Multi-photo lifestyle gallery */
+  images: string[];
   date: string;
   likes: number;
   views: number;
-  comments: { user: string; text: string }[];
+  /** Denormalized total; full rows live in post_comments / comment-store */
+  commentCount: number;
+  /** Legacy/preview only — prefer comment-store for full lists */
+  comments: PostComment[];
   active: boolean;
   sortOrder: number;
 };
@@ -88,6 +104,8 @@ export type BannerRecord = {
   image: string;
   headline: Localized;
   sub: Localized;
+  /** Optional product slug — hero slide links to this collection piece */
+  linkSlug: string;
   category: "hero" | "news";
   active: boolean;
   sortOrder: number;
@@ -183,10 +201,12 @@ export type Post = {
   avatar: string;
   content: Localized;
   image: string;
+  images?: string[];
   date: string;
   likes: number;
   views: number;
-  comments: { user: string; text: string }[];
+  commentCount: number;
+  comments: PostComment[];
 };
 
 export type Banner = {
@@ -194,4 +214,5 @@ export type Banner = {
   image: string;
   headline: Localized;
   sub: Localized;
+  linkSlug?: string;
 };

@@ -10,6 +10,7 @@ import {
   getHeroBanners,
   getMarqueeMessages,
   getPosts,
+  getSiteSettings,
 } from "@/lib/cms/repository";
 import { stats } from "@/lib/data";
 import { dict, isLocale, type Locale } from "@/lib/i18n";
@@ -26,12 +27,13 @@ export default async function Home({
   const lang = raw as Locale;
   const t = dict[lang];
 
-  const [featured, articles, posts, banners, marquee] = await Promise.all([
+  const [featured, articles, posts, banners, marquee, settings] = await Promise.all([
     getFeaturedProducts(),
     getArticles(),
     getPosts(),
     getHeroBanners(),
     getMarqueeMessages(),
+    getSiteSettings(),
   ]);
 
   return (
@@ -132,7 +134,12 @@ export default async function Home({
             title={t.sections.postsTitle}
           />
           <div className="mt-14">
-            <SocialFeed posts={posts.slice(0, 6)} lang={lang} />
+            <SocialFeed
+              posts={posts.slice(0, 6)}
+              lang={lang}
+              commentsEnabled={settings.commentsEnabled}
+              likesEnabled={settings.likesEnabled}
+            />
           </div>
           <div className="mt-14 text-center">
             <Link href={`/${lang}/posts`} className="btn-gold">
@@ -146,15 +153,15 @@ export default async function Home({
         <div className="mx-auto max-w-[1280px] px-5 lg:px-8 text-center relative z-10">
           <span className="gold-rule !w-16 mx-auto block" />
           <h2 className="font-display text-3xl lg:text-5xl text-paper mt-6">
-            {t.contact.title}
+            {t.sections.aboutTitle}
           </h2>
-          <p className="mt-5 text-ivory/70 max-w-xl mx-auto">{t.contact.desc}</p>
+          <p className="mt-5 text-ivory/70 max-w-xl mx-auto">{t.sections.aboutDesc}</p>
           <div className="mt-10">
             <Link
-              href={`/${lang}/contact`}
+              href={`/${lang}/about`}
               className="btn-gold !border-gold-soft !text-paper hover:!bg-gold hover:!text-ink"
             >
-              {t.common.contactUs}
+              {t.nav.about}
             </Link>
           </div>
         </div>

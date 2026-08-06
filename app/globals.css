@@ -1,22 +1,22 @@
 @import "tailwindcss";
 
-/* ============ Design tokens: premium auction house ============ */
+/* ============ Design tokens: private collection association ============ */
 @theme {
-  --color-ivory: #faf7f1;
-  --color-ivory-deep: #f1ebe0;
-  --color-paper: #fffdf9;
-  --color-ink: #1a1512;
-  --color-ink-soft: #4b423b;
-  --color-muted: #8b8178;
-  --color-line: #e6ddcf;
+  --color-ivory: #f7f3ea;
+  --color-ivory-deep: #ebe4d6;
+  --color-paper: #fcfaf5;
+  --color-ink: #16120f;
+  --color-ink-soft: #453c35;
+  --color-muted: #85796d;
+  --color-line: #ddd2c2;
 
-  --color-bordeaux: #6e0f1a;
-  --color-bordeaux-deep: #530a13;
-  --color-bordeaux-soft: #8a1524;
+  --color-bordeaux: #5c1a1f;
+  --color-bordeaux-deep: #3f1014;
+  --color-bordeaux-soft: #7a2a31;
 
-  --color-gold: #b8945f;
-  --color-gold-soft: #cbab77;
-  --color-gold-deep: #9a7942;
+  --color-gold: #a8894e;
+  --color-gold-soft: #c4a66a;
+  --color-gold-deep: #8a6f38;
 
   /* MY Chinese market: prefer SC/TC + Latin; drop JP faces */
   --font-display: var(--font-cormorant), "Noto Serif SC", "Source Han Serif SC",

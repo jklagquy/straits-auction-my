@@ -12,16 +12,25 @@ export default function Hero({
   lang: Locale;
   banners: Banner[];
 }) {
-  const t = dict[lang];  const [idx, setIdx] = useState(0);
+  const t = dict[lang];
+  const [idx, setIdx] = useState(0);
+  const slides = banners.length ? banners : [];
 
   useEffect(() => {
-    const id = setInterval(() => setIdx((i) => (i + 1) % banners.length), 6000);
+    if (slides.length < 2) return;
+    const id = setInterval(() => setIdx((i) => (i + 1) % slides.length), 6000);
     return () => clearInterval(id);
-  }, []);
+  }, [slides.length]);
+
+  if (!slides.length) return null;
+  const current = slides[idx]!;
+  const href = current.linkSlug
+    ? `/${lang}/products/${current.linkSlug}`
+    : `/${lang}/products`;
 
   return (
     <section className="relative h-screen min-h-[640px] w-full overflow-hidden bg-ink">
-      {banners.map((b, i) => (
+      {slides.map((b, i) => (
         <div
           key={b.id}
           className={`absolute inset-0 transition-opacity duration-[1400ms] ${
@@ -44,34 +53,35 @@ export default function Hero({
             <div key={idx} className="animate-fade-up">
               <div className="flex items-center gap-4 mb-6">
                 <span className="gold-rule !w-12" />
-                <span className="eyebrow !text-gold-soft">
-                  {t.heroTag}
-                </span>
+                <span className="eyebrow !text-gold-soft">{t.heroTag}</span>
               </div>
               <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl leading-[1.1] text-paper">
-                {tr(banners[idx].headline, lang)}
+                {tr(current.headline, lang)}
               </h1>
               <p className="mt-6 text-lg text-ivory/75 font-light leading-relaxed">
-                {tr(banners[idx].sub, lang)}
+                {tr(current.sub, lang)}
               </p>
             </div>
             <div className="mt-10 flex flex-wrap gap-4 animate-fade-up delay-2">
-              <Link href={`/${lang}/products`} className="btn-gold !text-paper !border-gold-soft hover:!bg-gold hover:!text-ink">
-                {t.hero.enter}
+              <Link
+                href={href}
+                className="btn-gold !text-paper !border-gold-soft hover:!bg-gold hover:!text-ink"
+              >
+                {t.common.viewDetail}
               </Link>
-              <Link href={`/${lang}/about`} className="btn-solid">
-                {t.nav.about}
+              <Link href={`/${lang}/products`} className="btn-solid">
+                {t.hero.enter}
               </Link>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Dots */}
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-10 flex gap-3">
-        {banners.map((_, i) => (
+        {slides.map((_, i) => (
           <button
             key={i}
+            type="button"
             onClick={() => setIdx(i)}
             aria-label={`slide ${i + 1}`}
             className={`h-[3px] transition-all duration-500 ${

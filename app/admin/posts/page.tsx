@@ -22,7 +22,9 @@ export default async function AdminPostsPage() {
               <div className="font-medium">{p.author.cn}</div>
               <div className="text-zinc-500 line-clamp-1 mt-1">{p.content.cn}</div>
             </div>
-            <div className="flex gap-3 shrink-0">
+            <div className="flex gap-3 shrink-0 items-center">
+              <span className="text-zinc-400 text-xs">{p.commentCount ?? 0} 评</span>
+              <Link href={`/admin/posts/${p.id}/comments`} className="text-zinc-700">评论</Link>
               <Link href={`/admin/posts/${p.id}`} className="text-blue-700">编辑</Link>
               <form action={deletePostAction}>
                 <input type="hidden" name="id" value={p.id} />

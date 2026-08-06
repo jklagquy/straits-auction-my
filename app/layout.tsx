@@ -17,9 +17,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "海峡金石拍卖 · Straits Scholar's Auction",
+  title: "万国古董文博协会 · WACA",
   description:
-    "寿山石、田黄石、鸡血石与娘惹文物、海峡古董 — 立足吉隆坡与槟城的国际拍卖平台。",
+    "万国古董文博协会（World Antique Cultural-Heritage Association）— 私人收藏与文博交流平台。",
 };
 
 export default function RootLayout({

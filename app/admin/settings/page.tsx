@@ -21,7 +21,36 @@ export default async function AdminSettingsPage() {
       </div>
 
       <form action={saveSiteSettingsAction} className="space-y-4 rounded-xl border bg-white p-6">
-        <h2 className="font-semibold">Logo</h2>
+        <h2 className="font-semibold">互动权限</h2>
+        <p className="text-xs text-zinc-500 -mt-2">
+          关闭后，主站点击「评论」或「点赞」会弹出「会员操作」提示（随前台语言切换）。
+        </p>
+        <label className="flex items-center justify-between gap-4 rounded-lg border px-4 py-3 text-sm">
+          <span>
+            <span className="font-medium">评论权限</span>
+            <span className="block text-xs text-zinc-500 mt-0.5">开启后访客可展开查看评论；关闭则点击提示会员操作</span>
+          </span>
+          <input
+            type="checkbox"
+            name="comments_enabled"
+            defaultChecked={s.commentsEnabled !== false}
+            className="h-5 w-5"
+          />
+        </label>
+        <label className="flex items-center justify-between gap-4 rounded-lg border px-4 py-3 text-sm">
+          <span>
+            <span className="font-medium">点赞权限</span>
+            <span className="block text-xs text-zinc-500 mt-0.5">开启后可点赞；关闭则点击提示会员操作</span>
+          </span>
+          <input
+            type="checkbox"
+            name="likes_enabled"
+            defaultChecked={s.likesEnabled !== false}
+            className="h-5 w-5"
+          />
+        </label>
+
+        <h2 className="font-semibold pt-4">Logo</h2>
         <MediaUploader name="logo_url" defaultValue={s.logoUrl} folder="logo" label="上传或粘贴 Logo URL" />
 
         <h2 className="font-semibold pt-4">品牌名称</h2>

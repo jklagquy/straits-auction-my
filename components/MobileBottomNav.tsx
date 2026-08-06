@@ -18,17 +18,17 @@ export default function MobileBottomNav({
   const waUrl = wa
     ? `https://wa.me/${wa}?text=${encodeURIComponent(
         lang === "en"
-          ? "Hello, I would like to enquire about your lots."
-          : "你好，想咨询拍品详情。"
+          ? "Hello, I would like to enquire about your collections."
+          : "你好，想咨询藏品详情。"
       )}`
-    : `/${lang}/contact`;
+    : `/${lang}/about`;
 
   const items = [
     { href: `/${lang}`, label: t.nav.home, icon: HomeIcon },
     { href: `/${lang}/products`, label: t.nav.products, icon: GridIcon },
     { href: waUrl, label: "WhatsApp", icon: WaIcon, external: Boolean(wa), highlight: true },
     { href: `/${lang}/posts`, label: t.nav.posts, icon: PostsIcon },
-    { href: `/${lang}/contact`, label: t.nav.contact, icon: ContactIcon },
+    { href: `/${lang}/about`, label: t.nav.about, icon: ContactIcon },
   ];
 
   const active = (href: string) =>

@@ -13,6 +13,7 @@ import {
   products,
 } from "../data";
 import type { CmsStore, SpecRow } from "./types";
+import { virtualCommentCount } from "./virtual-comments";
 
 function L(cn: string, zh: string, en: string): Localized {
   return { cn, zh, en };
@@ -70,16 +71,24 @@ function mapArticle(a: Article, i: number) {
 }
 
 function mapPost(p: Post, i: number) {
+  const images =
+    p.images && p.images.length > 0 ? p.images : p.image ? [p.image] : [];
   return {
     id: p.id,
     author: p.author,
     avatar: p.avatar,
     content: p.content,
-    image: p.image,
+    image: p.image || images[0] || "",
+    images,
     date: p.date,
     likes: p.likes,
     views: p.views,
-    comments: p.comments,
+    commentCount: virtualCommentCount(p.id),
+    comments: (p.comments || []).map((c, ci) => ({
+      id: `${p.id}-seed-${ci}`,
+      user: c.user,
+      text: c.text,
+    })),
     active: true,
     sortOrder: i,
   };
@@ -95,20 +104,26 @@ export function buildDefaultStore(): CmsStore {
       currency: "MYR",
     },
     siteSettings: {
-      brand: L("海峡金石拍卖", "海峽金石拍賣", "Straits Scholar's Auction"),
-      brandSub: L("Straits Scholar's Auction", "Straits Scholar's Auction", "Straits Scholar's Auction"),
+      brand: L("万国古董文博协会", "萬國古董文博協會", "WACA"),
+      brandSub: L(
+        "World Antique Cultural-Heritage Association",
+        "World Antique Cultural-Heritage Association",
+        "World Antique Cultural-Heritage Association"
+      ),
       logoUrl: "",
-      company: L("海峡金石拍卖有限公司", "海峽金石拍賣有限公司", "Straits Scholar's Auction Sdn. Bhd."),
+      company: L("万国古董文博协会", "萬國古董文博協會", "World Antique Cultural-Heritage Association"),
       whatsappNumber: "60321488800",
       tawkPropertyId: "",
       tawkWidgetId: "",
-      contactEmail: "info@straitsscholars.com.my",
+      contactEmail: "info@waca.art",
       contactPhone: "+60 3-2148 8800",
       address: L(
-        "马来西亚吉隆坡武吉免登区 · 槟城乔治市展厅",
-        "馬來西亞吉隆坡武吉免登區 · 檳城喬治市展廳",
-        "Bukit Bintang, Kuala Lumpur · George Town, Penang"
+        "马来西亚吉隆坡 · 槟城",
+        "馬來西亞吉隆坡 · 檳城",
+        "Kuala Lumpur · Penang, Malaysia"
       ),
+      commentsEnabled: true,
+      likesEnabled: true,
     },
     saleSessions: [
       {
@@ -143,6 +158,7 @@ export function buildDefaultStore(): CmsStore {
         image: b.image,
         headline: b.headline,
         sub: b.sub,
+        linkSlug: b.linkSlug || "",
         category: "hero" as const,
         active: true,
         sortOrder: i,
@@ -152,6 +168,7 @@ export function buildDefaultStore(): CmsStore {
         image: "/products/news-1782909343523-xnfjx.png",
         headline: L("田黄石市场洞察", "田黃石市場洞察", "Tianhuang Market Insight"),
         sub: L("东南亚藏家关注", "東南亞藏家關注", "SEA collector focus"),
+        linkSlug: "",
         category: "news" as const,
         active: true,
         sortOrder: 0,

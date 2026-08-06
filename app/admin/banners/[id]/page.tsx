@@ -19,6 +19,7 @@ export default async function AdminBannerEditPage({
         image: "",
         headline: { cn: "", zh: "", en: "" },
         sub: { cn: "", zh: "", en: "" },
+        linkSlug: "",
         category: "hero" as const,
         active: true,
         sortOrder: 0,
@@ -38,6 +39,15 @@ export default async function AdminBannerEditPage({
             <option value="hero">首页 Hero</option>
             <option value="news">新闻横幅</option>
           </select>
+        </div>
+        <div>
+          <label className="text-xs text-zinc-500 block mb-1">链接藏品 slug（首页轮播点击跳转）</label>
+          <input
+            name="link_slug"
+            defaultValue={banner.linkSlug || ""}
+            placeholder="例如 tianhuang-seal"
+            className="w-full border rounded px-3 py-2 text-sm"
+          />
         </div>
         <input name="headline_cn" defaultValue={banner.headline.cn} placeholder="标题简体" className="w-full border rounded px-3 py-2 text-sm" />
         <input name="headline_zh" defaultValue={banner.headline.zh} placeholder="标题繁體" className="w-full border rounded px-3 py-2 text-sm" />

@@ -1,5 +1,6 @@
 import type { Localized, Locale } from "./i18n";
 import { tr } from "./i18n";
+import { coinjshtPosts, coinjshtProducts } from "./coinjsht-seed";
 
 export type Spec = { label: Localized; value: Localized };
 
@@ -36,13 +37,21 @@ export type Post = {
   avatar: string;
   content: Localized;
   image: string;
+  /** Multi-photo lifestyle gallery (detail page). Falls back to [image]. */
+  images?: string[];
   date: string;
   likes: number;
   views: number;
   comments: Comment[];
 };
 
-export type Banner = { id: string; image: string; headline: Localized; sub: Localized };
+export type Banner = {
+  id: string;
+  image: string;
+  headline: Localized;
+  sub: Localized;
+  linkSlug?: string;
+};
 
 const prod = (name: string) => `/products/${name}`;
 const gl = (...names: string[]) => names.map((n) => prod(n));
@@ -76,7 +85,7 @@ const CERT = sp(
 const FJ = ["福建 · 寿山", "福建 · 壽山", "Fujian · Shoushan"] as const;
 const MY = ["马来西亚 · 海峡华人传承", "馬來西亞 · 海峽華人傳承", "Malaysia · Straits Chinese heritage"] as const;
 
-export const products: Product[] = [
+const legacyProducts: Product[] = [
   {
     id: "p1", slug: "tianhuang-seal", featured: true,
     category: L("田黄石", "田黃石", "Tianhuang Stone"),
@@ -162,8 +171,8 @@ export const products: Product[] = [
       "芙蓉石色白而微透，雕觀音立像，神態安詳，衣紋流轉。適合供奉或陳設，價位較田黃親民，是華人藏家常見入門品類。",
       "Furong stone, pale and slightly translucent, is carved as a serene standing Guanyin. A accessible entry point for Chinese collectors compared with Tianhuang."
     ),
-    estimate: "RM 68,000 – 98,000", lotNo: "SS-2026-005", image: prod("ss-04.jpg"),
-    gallery: gl("ss-04.jpg", "ss-16.jpg", "ss-08.png"),
+    estimate: "RM 68,000 – 98,000", lotNo: "SS-2026-005", image: prod("ss-16.jpg"),
+    gallery: gl("ss-16.jpg", "ss-07.jpg", "ss-01.png"),
     specs: [
       sp(SL.material, "寿山芙蓉石", "壽山芙蓉石", "Shoushan furong"),
       sp(SL.craft, "圆雕观音", "圓雕觀音", "Round carving · Guanyin"),
@@ -180,8 +189,8 @@ export const products: Product[] = [
       "杜陵石質地堅潤，宜做薄意。此件以遠近山水為題，亭台隱現，刀層分明，置於案頭頗有意境。",
       "Dense and lustrous, duling stone suits low-relief work. Distant mountains and pavilions emerge in layered carving — a contemplative desk piece."
     ),
-    estimate: "RM 45,000 – 72,000", lotNo: "SS-2026-006", image: prod("ss-05.jpg"),
-    gallery: gl("ss-05.jpg", "ss-04.jpg", "ss-07.jpg"),
+    estimate: "RM 45,000 – 72,000", lotNo: "SS-2026-006", image: prod("ss-02.png"),
+    gallery: gl("ss-02.png", "ss-01.png", "ss-07.jpg"),
     specs: [sp(SL.material, "杜陵石", "杜陵石", "Duling stone"), sp(SL.craft, "薄意山水", "薄意山水", "Low-relief landscape"), sp(SL.origin, ...FJ), CERT],
   },
   {
@@ -199,32 +208,40 @@ export const products: Product[] = [
     specs: [sp(SL.material, "荔枝洞石", "荔枝洞石", "Lizhi cave stone"), sp(SL.origin, ...FJ), CERT],
   },
   {
-    id: "p8", slug: "qijiang-seal",
-    category: L("寿山石", "壽山石", "Shoushan Stone"),
-    title: L("旗降石兽钮印章", "旗降石獸鈕印章", "Qijiang Stone Beast-Knob Seal"),
-    excerpt: L("旗降色稳 · 兽钮古意", "旗降色穩 · 獸鈕古意", "Stable qijiang tone, archaic beast knob."),
+    id: "p8", slug: "japan-return-qijiang-seal",
+    category: L("东洋回流", "東洋回流", "Japan-Return Stone"),
+    title: L("东洋回流旗降石兽钮章", "東洋回流旗降石獸鈕章", "Japan-Return Qijiang Beast-Knob Seal"),
+    excerpt: L("协会唯一东洋回流件 · 寿山旗降 · 日本旧藏", "協會唯一東洋回流件 · 壽山旗降 · 日本舊藏", "Sole Japan-return piece · qijiang · Japanese provenance."),
     description: L(
-      "旗降石色偏稳沉，适合雕钮制印。此印兽钮古拙，印面未刻，便于藏家自定内容。",
-      "旗降石色偏穩沉，適合雕鈕製印。此印獸鈕古拙，印面未刻，便於藏家自定內容。",
-      "Qijiang stone's subdued tone suits knob seals. An archaic beast finial with a blank face ready for the owner's inscription."
+      "此章为寿山旗降石兽钮印，石料与钮式属福州印石传统；来源标注为日本关西私人旧藏回流。马来西亚藏家圈常见「东洋回流」寿山印石，本协会仅保留这一件作为国际对照，其余藏品以福建寿山与马来西亚本土文物为主。",
+      "此章為壽山旗降石獸鈕印，石料與鈕式屬福州印石傳統；來源標註為日本關西私人舊藏回流。馬來西亞藏家圈常見「東洋回流」壽山印石，本協會僅保留這一件作為國際對照，其餘藏品以福建壽山與馬來西亞本土文物為主。",
+      "A Shoushan qijiang beast-knob seal in the Fuzhou tradition, with documented return from a Kansai private collection. 'Japan-return' Shoushan seals are familiar to Malaysian collectors; WACA keeps only this one international-return piece, with the rest of the catalogue focused on Fujian stone and Malaysian heritage."
     ),
-    estimate: "RM 32,000 – 48,000", lotNo: "SS-2026-008", image: prod("ss-08.png"),
-    gallery: gl("ss-08.png", "ss-03.jpg", "ss-04.jpg"),
-    specs: [sp(SL.material, "旗降石", "旗降石", "Qijiang stone"), sp(SL.origin, ...FJ), CERT],
+    estimate: "RM 32,000 – 48,000", lotNo: "JP-2026-008", image: prod("ss-08.png"),
+    gallery: gl("ss-08.png", "ss-03.jpg", "ss-01.png"),
+    specs: [
+      sp(SL.material, "旗降石", "旗降石", "Qijiang stone"),
+      sp(SL.origin, "福建寿山 · 日本回流", "福建壽山 · 日本回流", "Shoushan · Japan return"),
+      sp(SL.provenance, "关西私人旧藏", "關西私人舊藏", "Kansai private collection"), CERT,
+    ],
   },
   {
-    id: "p9", slug: "kengtou-crystal",
-    category: L("寿山石", "壽山石", "Shoushan Stone"),
-    title: L("坑头晶石水盂", "坑頭晶石水盂", "Kengtou Crystal Water Pot"),
-    excerpt: L("晶质通透 · 文房雅器", "晶質通透 · 文房雅器", "Translucent crystal, scholar's desk piece."),
+    id: "p9", slug: "dzi-nine-eye",
+    category: L("天珠", "天珠", "Dzi Beads"),
+    title: L("九眼天珠 · 吉隆坡华人旧藏", "九眼天珠 · 吉隆坡華人舊藏", "Nine-Eye Dzi · KL Chinese Provenance"),
+    excerpt: L("马来西亚华人圈热门 · 眼纹清晰 · 包浆自然", "馬來西亞華人圈熱門 · 眼紋清晰 · 包漿自然", "Popular among MY Chinese collectors · clear eyes · natural patina."),
     description: L(
-      "坑头晶石透明度高，此水盂器形规整，壁薄而匀，光下可见天然纹理，为文房雅玩佳品。",
-      "坑頭晶石透明度高，此水盂器形規整，壁薄而勻，光下可見天然紋理，為文房雅玩佳品。",
-      "Highly transparent kengtou crystal formed into a water pot — thin, even walls reveal natural veining under light."
+      "天珠在马来西亚华人佛教与风水收藏圈流通已久，吉隆坡、槟城藏家常作为护身与陈设。此九眼珠眼纹分布清楚，表面包浆自然，附旧藏盒，符合本地市场常见品相标准，非臆造新仿。",
+      "天珠在馬來西亞華人佛教與風水收藏圈流通已久，吉隆坡、檳城藏家常作為護身與陳設。此九眼珠眼紋分佈清楚，表面包漿自然，附舊藏盒，符合本地市場常見品相標準，非臆造新仿。",
+      "Dzi beads have long circulated among Malaysian Chinese Buddhist and feng-shui collectors in KL and Penang. This nine-eye bead shows clear eye patterning and natural surface wear, with an old case — consistent with local market standards rather than fresh replicas."
     ),
-    estimate: "RM 56,000 – 84,000", lotNo: "SS-2026-009", image: prod("ss-01.png"),
-    gallery: gl("ss-01.png", "ss-02.png", "ss-05.jpg"),
-    specs: [sp(SL.material, "坑头晶石", "坑頭晶石", "Kengtou crystal"), sp(SL.origin, ...FJ), CERT],
+    estimate: "RM 48,000 – 78,000", lotNo: "MY-2026-009", image: prod("dzi-9eye.jpg"),
+    gallery: gl("dzi-9eye.jpg", "dzi-12eye.jpg", "dzi-tiger.jpg"),
+    specs: [
+      sp(SL.material, "天珠（蚀花玛瑙类）", "天珠（蝕花瑪瑙類）", "Dzi · etched agate type"),
+      sp(SL.provenance, "吉隆坡华人旧藏", "吉隆坡華人舊藏", "KL Chinese private collection"),
+      sp(SL.era, "传世旧珠", "傳世舊珠", "Heirloom bead"), CERT,
+    ],
   },
   {
     id: "p10", slug: "tianhuang-beads",
@@ -274,9 +291,9 @@ export const products: Product[] = [
     title: L("娘惹彩绘大罐 · 槟城旧藏", "娘惹彩繪大罐 · 檳城舊藏", "Nyonya Enamel Jar · Penang Provenance"),
     excerpt: L("粉彩花卉 · 海峡风格 · 品相完整", "粉彩花卉 · 海峽風格 · 品相完整", "Famille rose florals, Straits style, intact condition."),
     description: L(
-      "娘惹瓷器融合中式器型与马来半岛审美，色彩浓艳。此罐绘牡丹与瑞鸟，口沿金彩保存良好，来源槟城老宅，是马来西亚拍卖市场热门品类。",
-      "娘惹瓷器融合中式器型與馬來半島審美，色彩濃豔。此罐繪牡丹與瑞鳥，口沿金彩保存良好，來源檳城老宅，是馬來西亞拍賣市場熱門品類。",
-      "Nyonya ware blends Chinese forms with Malayan taste in bold enamels. Peonies and auspicious birds circle this jar from an old Penang home — a staple of Malaysian auction rooms."
+      "娘惹（Nyonya）彩瓷为峇峇娘惹社群特有收藏品类，器型承中国外销瓷传统，釉色与纹样则迎合马来半岛口味：牡丹、凤凰、瓜果常见。槟城乔治市与马六甲老宅拆出件在本地藏家圈流通最广；此罐口沿描金保存尚可，底款与胎质符合 19 世纪末至 20 世纪初海峡制品特征。",
+      "娘惹（Nyonya）彩瓷為峇峇娘惹社群特有收藏品類，器型承中國外銷瓷傳統，釉色與紋樣則迎合馬來半島口味：牡丹、鳳凰、瓜果常見。檳城喬治市與馬六甲老宅拆出件在本地藏家圈流通最廣；此罐口沿描金保存尚可，底款與胎質符合 19 世紀末至 20 世紀初海峽製品特徵。",
+      "Nyonya enamelled porcelain is a hallmark of Peranakan households: Chinese export forms with Malayan colour taste — peonies, phoenixes, gourds. Pieces from George Town and Malacca shophouses dominate the local market; this jar retains usable gilt rims and body traits typical of late-19th to early-20th-century Straits ware."
     ),
     estimate: "RM 28,000 – 45,000", lotNo: "MY-2026-013", image: prod("my-nyonya.jpg"),
     gallery: gl("my-nyonya.jpg", "my-strait-porcelain.jpg", "my-baba-cabinet.jpg"),
@@ -292,9 +309,9 @@ export const products: Product[] = [
     title: L("马来克力士 · 波浪纹剑刃", "馬來克力士 · 波浪紋劍刃", "Malay Keris · Pamor Blade"),
     excerpt: L("Pamor 纹 · 木雕剑柄 · 传承完整", "Pamor 紋 · 木雕劍柄 · 傳承完整", "Pamor pattern, carved hilt, documented heritage."),
     description: L(
-      "克力士为马来世界最具代表性的器物之一，剑刃波浪纹（pamor）每把唯一。此件木柄雕工细腻，鞘装完整，适合民族文物与武器收藏板块。",
-      "克力士為馬來世界最具代表性的器物之一，劍刃波浪紋（pamor）每把唯一。此件木柄雕工細膩，鞘裝完整，適合民族文物與武器收藏板塊。",
-      "The keris is among the most iconic Malay objects — each pamor blade pattern is unique. Fine carved hilt and complete sheath; ideal for ethnographic and arms collecting."
+      "克力士（Keris）是马来半岛、印尼群岛重要的礼仪与身份兵器，刃身 pamor 由多层铁料锻焊形成，纹样各异。马来西亚博物与私人收藏中，完整带鞘、柄雕清晰者更受重视。此件波浪刃（luk）可辨，木鞘与金属箍保存相对完整，属半岛常见传世类型，非旅游纪念品级新做。",
+      "克力士（Keris）是馬來半島、印尼群島重要的禮儀與身份兵器，刃身 pamor 由多層鐵料鍛焊形成，紋樣各異。馬來西亞博物與私人收藏中，完整帶鞘、柄雕清晰者更受重視。此件波浪刃（luk）可辨，木鞘與金屬箍保存相對完整，屬半島常見傳世類型，非旅遊紀念品級新做。",
+      "The keris is a ceremonial and status blade across the Malay Peninsula and archipelago. Pamor patterns form from forge-welded layers; Malaysian museums and private collectors prefer complete sheaths and clear hilts. This example shows readable luk waves and a relatively intact wood sheath — a peninsula heirloom type rather than tourist-grade new make."
     ),
     estimate: "RM 35,000 – 55,000", lotNo: "MY-2026-014", image: prod("my-keris.jpg"),
     gallery: gl("my-keris.jpg", "my-pewter.jpg", "my-banknote.jpg"),
@@ -360,23 +377,112 @@ export const products: Product[] = [
     gallery: gl("my-baba-cabinet.jpg", "my-nyonya.jpg", "my-strait-porcelain.jpg"),
     specs: [sp(SL.material, "木 · 漆 · 螺钿", "木 · 漆 · 螺鈿", "Wood · lacquer · mother-of-pearl"), sp(SL.provenance, "槟城乔治市", "檳城喬治市", "George Town, Penang"), CERT],
   },
+  {
+    id: "p19", slug: "tianhuang-jipin-limited", featured: true,
+    category: L("田黄石", "田黃石", "Tianhuang Stone"),
+    title: L("极品田黄石素章 · 限量", "極品田黃石素章 · 限量", "Top-grade Tianhuang Plain Seal · Limited"),
+    excerpt: L("溪田极品 · 萝卜丝纹 · 石帝灵韵", "溪田極品 · 蘿蔔絲紋 · 石帝靈韻", "Stream-field grade · radish-silk grain · stone emperor."),
+    description: L(
+      "万年溪田淬炼而成的文房至宝，独产于寿山溪田沃土。此方极品田黄素章石质温润绵密，肌理莹透，自然光下细密萝卜丝纹舒展如云烟，石色金黄含蓄而不俗。古有「一两田黄三两金」之誉；现优质溪田料日稀，形制端正、色纹兼备者尤难得。适合篆刻、盘玩与陈设，亦为协会自老站迁入的核心田黄藏品。",
+      "萬年溪田淬煉而成的文房至寶，獨產於壽山溪田沃土。此方極品田黃素章石質溫潤綿密，肌理瑩透，自然光下細密蘿蔔絲紋舒展如雲煙，石色金黃含蓄而不俗。古有「一兩田黃三兩金」之譽；現優質溪田料日稀，形制端正、色紋兼備者尤難得。適合篆刻、盤玩與陳設，亦為協會自老站遷入的核心田黃藏品。",
+      "A top-grade plain Tianhuang seal from Shoushan stream-field deposits — creamy, dense, translucent, with fine radish-silk veining under light and restrained golden tone. Classic lore prized Tianhuang above gold by weight; well-formed pieces with colour and grain are scarce today. Suited to seal cutting, handling and display — a core Tianhuang lot migrated from the prior catalogue."
+    ),
+    estimate: "RM 220,000 – 380,000", lotNo: "TIANHUANGSHI-090001-JIPIN",
+    image: prod("ss-41-cover.jpg"),
+    gallery: gl("ss-41-cover.jpg", "ss-41a.jpg", "ss-41b.jpg", "ss-41c.jpg"),
+    specs: [
+      sp(SL.material, "寿山田黄石 · 极品", "壽山田黃石 · 極品", "Shoushan Tianhuang · top grade"),
+      sp(SL.craft, "素章 · 无钮雕", "素章 · 無鈕雕", "Plain seal · no knob carving"),
+      sp(SL.origin, ...FJ),
+      sp(SL.provenance, "协会迁入藏品", "協會遷入藏品", "Association migrated lot"), CERT,
+    ],
+  },
+  {
+    id: "p20", slug: "tianhuang-mid-grade",
+    category: L("田黄石", "田黃石", "Tianhuang Stone"),
+    title: L("中品田黄石", "中品田黃石", "Medium-grade Tianhuang Stone"),
+    excerpt: L("石中之王 · 萝卜丝纹 · 温润如脂", "石中之王 · 蘿蔔絲紋 · 溫潤如脂", "King of stones · radish grain · creamy touch."),
+    description: L(
+      "田黄石产于寿山溪旁田垄，自古视为「石中之王」。中品料以温润石肌与天然萝卜丝纹见长，色多见黄金黄、鸡油黄，含蓄不张扬；抚之如凝脂，观之如蜜蜡。适合入门收藏与案头清玩，亦是马来西亚华人圈常见的田黄起点品类。",
+      "田黃石產於壽山溪旁田壟，自古視為「石中之王」。中品料以溫潤石肌與天然蘿蔔絲紋見長，色多見黃金黃、雞油黃，含蓄不張揚；撫之如凝脂，觀之如蜜蠟。適合入門收藏與案頭清玩，亦是馬來西亞華人圈常見的田黃起點品類。",
+      "Tianhuang from the paddies beside Shoushan streams has long been called the 'king of stones'. Mid-grade pieces favour a creamy body and natural radish-silk grain in golden or chicken-oil yellow — a familiar starting point for Malaysian Chinese collectors and desk enjoyment."
+    ),
+    estimate: "RM 48,000 – 72,000", lotNo: "ZPTHS09252616161",
+    image: prod("ss-42-cover.jpg"),
+    gallery: gl("ss-42-cover.jpg", "ss-42a.jpg", "ss-03.jpg"),
+    specs: [
+      sp(SL.material, "田黄石 · 中品", "田黃石 · 中品", "Tianhuang · medium grade"),
+      sp(SL.origin, ...FJ), CERT,
+    ],
+  },
+  {
+    id: "p21", slug: "shoushan-chicken-blood", featured: true,
+    category: L("鸡血石", "雞血石", "Chicken-Blood Stone"),
+    title: L("寿山石系 · 鸡血石重器", "壽山石系 · 雞血石重器", "Shoushan Circle · Chicken-Blood Masterpiece"),
+    excerpt: L("石中红玉 · 辰砂血色 · 印石双绝", "石中紅玉 · 辰砂血色 · 印石雙絕", "Red jade among stones · cinnabar red · seal-stone twin."),
+    description: L(
+      "鸡血石与田黄并称印石双绝，为中国四大国石之一，素有「石中红玉」「活血之宝」之称。主产浙江昌化与内蒙古巴林；以体内鲜红辰砂「血」为魂。此件血色凝活、地子稳净，适合重器收藏与开业、节庆陈设，亦为老站迁入的核心鸡血藏品。",
+      "雞血石與田黃並稱印石雙絕，為中國四大國石之一，素有「石中紅玉」「活血之寶」之稱。主產浙江昌化與內蒙古巴林；以體內鮮紅辰砂「血」為魂。此件血色凝活、地子穩淨，適合重器收藏與開業、節慶陳設，亦為老站遷入的核心雞血藏品。",
+      "With Tianhuang, chicken-blood stone forms the twin peaks of seal stones and is one of China's four national stones — the 'red jade' prized for vivid cinnabar 'blood'. Main sources are Changhua (Zhejiang) and Balin (Inner Mongolia). This piece shows lively red on a stable ground — a centrepiece lot migrated from the prior catalogue."
+    ),
+    estimate: "RM 680,000 – 980,000", lotNo: "ZPTHS09253588777",
+    image: prod("ss-21.png"),
+    gallery: gl("ss-21.png", "ss-06.jpg", "ss-03.jpg"),
+    specs: [
+      sp(SL.material, "鸡血石", "雞血石", "Chicken-blood stone"),
+      sp(SL.origin, "浙江昌化 / 巴林系", "浙江昌化 / 巴林系", "Changhua / Balin type"), CERT,
+    ],
+  },
 ];
 
 export const banners: Banner[] = [
   {
-    id: "b1", image: prod("hero-main.jpg"),
-    headline: L("寿山石 · 田黄重器", "壽山石 · 田黃重器", "Shoushan Stones · Tianhuang Masterpieces"),
-    sub: L("福建石文化 · 南洋藏家之选", "福建石文化 · 南洋藏家之選", "Fujian stone heritage for Nanyang collectors"),
+    id: "b1", image: prod("banner-h01.png"),
+    linkSlug: "tianhuang-jipin-limited",
+    headline: L("极品田黄石 · 限量典藏", "極品田黃石 · 限量典藏", "Top-grade Tianhuang · Limited"),
+    sub: L("点击查看藏品详情", "點擊查看藏品詳情", "View this piece in the catalogue"),
   },
   {
-    id: "b2", image: prod("ss-17.png"),
-    headline: L("五龙戏珠 · 田黄大方印", "五龍戲珠 · 田黃大方印", "Five-Dragon Tianhuang Imperial Seal"),
-    sub: L("殿堂级重器 · 吉隆坡预展中", "殿堂級重器 · 吉隆坡預展中", "Museum-grade piece · previewing in KL"),
+    id: "b2", image: prod("banner-h02.jpg"),
+    linkSlug: "tianhuang-jipin-limited",
+    headline: L("溪田石帝 · 文房至宝", "溪田石帝 · 文房至寶", "Stream-field emperor · scholar's treasure"),
+    sub: L("协会精选田黄重器", "協會精選田黃重器", "Association Tianhuang highlight"),
   },
   {
-    id: "b3", image: prod("my-nyonya.jpg"),
-    headline: L("娘惹珍品 · 海峡传承", "娘惹珍品 · 海峽傳承", "Peranakan Treasures · Straits Heritage"),
-    sub: L("槟城 · 马六甲 · 本土热门拍品", "檳城 · 馬六甲 · 本土熱門拍品", "Penang · Malacca · local auction favourites"),
+    id: "b3", image: prod("banner-h03.jpg"),
+    linkSlug: "shoushan-chicken-blood",
+    headline: L("鸡血石 · 石中红玉", "雞血石 · 石中紅玉", "Chicken-Blood · Red Jade of Stones"),
+    sub: L("印石双绝之一", "印石雙絕之一", "One of the twin seal-stone legends"),
+  },
+  {
+    id: "b4", image: prod("banner-h04.jpg"),
+    linkSlug: "wulong-tianhuang-yuxi",
+    headline: L("五龙戏珠田黄大方印", "五龍戲珠田黃大方印", "Five-Dragon Tianhuang Imperial Seal"),
+    sub: L("殿堂级寿山重器", "殿堂級壽山重器", "Museum-grade Shoushan piece"),
+  },
+  {
+    id: "b5", image: prod("banner-h05.jpg"),
+    linkSlug: "tianhuang-mid-grade",
+    headline: L("中品田黄 · 入门优选", "中品田黃 · 入門優選", "Mid-grade Tianhuang · Ideal entry"),
+    sub: L("温润萝卜丝纹", "溫潤蘿蔔絲紋", "Creamy body · radish-silk grain"),
+  },
+  {
+    id: "b6", image: prod("ss-17.png"),
+    linkSlug: "wulong-tianhuang-yuxi",
+    headline: L("寿山石与南洋珍藏", "壽山石與南洋珍藏", "Shoushan & Nanyang Collections"),
+    sub: L("浏览全部藏品", "瀏覽全部藏品", "Browse the full catalogue"),
+  },
+  {
+    id: "b7", image: prod("my-nyonya.jpg"),
+    linkSlug: "nyonya-ware",
+    headline: L("娘惹彩绘大罐 · 槟城旧藏", "娘惹彩繪大罐 · 檳城舊藏", "Nyonya Enamel Jar · Penang"),
+    sub: L("马来西亚热门本土藏品", "馬來西亞熱門本土藏品", "A Malaysian collecting favourite"),
+  },
+  {
+    id: "b8", image: prod("my-keris.jpg"),
+    linkSlug: "malay-keris",
+    headline: L("马来克力士 · 波浪纹剑刃", "馬來克力士 · 波浪紋劍刃", "Malay Keris · Pamor Blade"),
+    sub: L("半岛传世礼仪兵器", "半島傳世禮儀兵器", "Peninsula ceremonial heirloom"),
   },
 ];
 
@@ -541,16 +647,25 @@ const seeds: Seed[] = [
   { a: ["Beginner·2025", "Beginner·2025", "2025 Beginner"], av: ava("begin2025"), img: prod("ss-05.jpg"), d: "2025-03-22", c: ["2025 开始玩寿山石，从杜陵小件入门。海峡网站三语看起方便，英文也懂 lah。", "2025 開始玩壽山石，從杜陵小件入門。海峽網站三語看起方便，英文也懂 lah。", "Started Shoushan in 2025 with a small duling piece. Trilingual site helps — English also can lah."], likes: 401, views: 6320, cm: [["Welcome", "欢迎入坑"]] },
 ];
 
-export const posts: Post[] = seeds.map((s, i) => ({
-  id: `po${i + 1}`,
-  author: L(...s.a),
-  avatar: s.av,
-  content: L(...s.c),
-  image: s.img,
-  date: s.d,
-  likes: s.likes,
-  views: s.views,
-  comments: s.cm.map(([user, text]) => ({ user, text })),
+/** Malaysia-local lots kept alongside full coinjsht catalogue (correct per-SKU galleries). */
+const localMyProducts = legacyProducts.filter((p) =>
+  String(p.image).includes("/my-")
+);
+
+export const products: Product[] = [...coinjshtProducts, ...localMyProducts];
+
+/** Lifestyle collector feed migrated from coinjsht.com/tw (multi-image posts). */
+export const posts: Post[] = coinjshtPosts.map((p) => ({
+  id: p.id,
+  author: p.author,
+  avatar: p.avatar,
+  content: p.content,
+  image: p.image,
+  images: p.images,
+  date: p.date,
+  likes: p.likes,
+  views: p.views,
+  comments: p.comments,
 }));
 
 export const marqueeMessages: Localized[] = [

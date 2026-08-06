@@ -39,7 +39,6 @@ export default function Header({
     { href: `/${lang}/news`, label: t.nav.news },
     { href: `/${lang}/posts`, label: t.nav.posts },
     { href: `/${lang}/about`, label: t.nav.about },
-    { href: `/${lang}/contact`, label: t.nav.contact },
   ];
   // 手机汉堡：藏家动态改到底栏，避免与底栏重复
   const mobileNav = desktopNav.filter((n) => n.href !== `/${lang}/posts`);
@@ -52,7 +51,9 @@ export default function Header({
   const isActive = (href: string) =>
     href === `/${lang}` ? pathname === href : pathname.startsWith(href);
 
-  const solid = scrolled || open;
+  // 首页可透明叠在深色 Hero 上；内页（资讯等）浅底时强制实心深色字
+  const onHome = pathname === `/${lang}` || pathname === `/${lang}/`;
+  const solid = scrolled || open || !onHome;
 
   return (
     <header
@@ -75,14 +76,14 @@ export default function Header({
             ) : null}
             <span className="flex flex-col leading-none min-w-0">
               <span
-                className={`font-display text-xl lg:text-2xl tracking-wide-2 truncate ${
+                className={`font-display text-lg sm:text-xl lg:text-2xl tracking-wide-2 truncate max-w-[10rem] sm:max-w-[16rem] lg:max-w-none ${
                   solid ? "text-bordeaux" : "text-paper"
                 }`}
               >
                 {brand}
               </span>
               <span
-                className={`text-[10px] tracking-luxe mt-1 truncate ${
+                className={`text-[9px] sm:text-[10px] tracking-luxe mt-1 truncate max-w-[12rem] sm:max-w-[20rem] ${
                   solid ? "text-gold-deep" : "text-gold-soft"
                 }`}
               >
