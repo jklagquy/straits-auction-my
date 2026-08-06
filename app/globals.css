@@ -1,26 +1,198 @@
 @import "tailwindcss";
 
+/* ============ Design tokens: premium auction house ============ */
+@theme {
+  --color-ivory: #faf7f1;
+  --color-ivory-deep: #f1ebe0;
+  --color-paper: #fffdf9;
+  --color-ink: #1a1512;
+  --color-ink-soft: #4b423b;
+  --color-muted: #8b8178;
+  --color-line: #e6ddcf;
+
+  --color-bordeaux: #6e0f1a;
+  --color-bordeaux-deep: #530a13;
+  --color-bordeaux-soft: #8a1524;
+
+  --color-gold: #b8945f;
+  --color-gold-soft: #cbab77;
+  --color-gold-deep: #9a7942;
+
+  /* MY Chinese market: prefer SC/TC + Latin; drop JP faces */
+  --font-display: var(--font-cormorant), "Noto Serif SC", "Source Han Serif SC",
+    "Songti SC", "Microsoft YaHei", Georgia, serif;
+  --font-sans: var(--font-inter), "Noto Sans SC", "PingFang SC",
+    "Microsoft YaHei", "Segoe UI", sans-serif;
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --nav-h: 76px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  border-color: var(--color-line);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-ivory);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ============ Typographic helpers ============ */
+.font-display {
+  font-family: var(--font-display);
+}
+.tracking-luxe {
+  letter-spacing: 0.28em;
+}
+.tracking-wide-2 {
+  letter-spacing: 0.14em;
+}
+
+/* Thin gold divider used across sections */
+.gold-rule {
+  height: 1px;
+  width: 64px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-gold),
+    transparent
+  );
+}
+
+/* Kicker / eyebrow label */
+.eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--color-gold-deep);
+  font-weight: 600;
+}
+
+/* ============ Animations ============ */
+@keyframes kenburns {
+  0% {
+    transform: scale(1.08) translate(1%, -1%);
+  }
+  100% {
+    transform: scale(1) translate(0, 0);
+  }
+}
+.animate-kenburns {
+  animation: kenburns 12s ease-out forwards;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-up {
+  animation: fadeUp 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.delay-1 {
+  animation-delay: 0.15s;
+}
+.delay-2 {
+  animation-delay: 0.3s;
+}
+.delay-3 {
+  animation-delay: 0.45s;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+.animate-marquee {
+  animation: marquee 32s linear infinite;
+}
+
+/* ============ Utilities ============ */
+.hover-lift {
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.5s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 24px 60px -28px rgba(26, 21, 18, 0.4);
+}
+
+.link-underline {
+  position: relative;
+}
+.link-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: 0;
+  height: 1px;
+  background: currentColor;
+  transition: width 0.4s ease;
+}
+.link-underline:hover::after {
+  width: 100%;
+}
+
+.btn-gold {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.85rem 2rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--color-ink);
+  border: 1px solid var(--color-gold);
+  background: transparent;
+  transition: all 0.4s ease;
+}
+.btn-gold:hover {
+  background: var(--color-gold);
+  color: var(--color-paper);
+}
+
+.btn-solid {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.85rem 2rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--color-paper);
+  background: var(--color-bordeaux);
+  transition: all 0.4s ease;
+}
+.btn-solid:hover {
+  background: var(--color-bordeaux-deep);
+}
+
+::selection {
+  background: var(--color-bordeaux);
+  color: var(--color-paper);
 }
