@@ -436,21 +436,20 @@ const legacyProducts: Product[] = [
 ];
 
 /**
- * Hero slides use clean product photos (no baked-in Japanese marketing copy).
- * Localized headline/sub come from HTML overlay via Hero.tsx + tr().
- * linkSlug must match coinjsht product slugs in coinjshtProducts.
+ * Hero slides: prefer full-silhouette studio shots (Hero uses object-contain).
+ * No Japanese baked into art — headline/sub switch with site locale.
  */
 export const banners: Banner[] = [
   {
     id: "b1",
-    image: prod("cj-41-cover.jpg"),
+    image: prod("cj-41-g1.jpg"),
     linkSlug: "cj-41-top-grade-tianhuang-stone-limited",
     headline: L("极品田黄石 · 限量典藏", "極品田黃石 · 限量典藏", "Top-grade Tianhuang · Limited"),
-    sub: L("溪田石帝 · 点击查看藏品详情", "溪田石帝 · 點擊查看藏品詳情", "Stream-field emperor — view catalogue details"),
+    sub: L("溪田石帝 · 完整器形与原配锦盒", "溪田石帝 · 完整器形與原配錦盒", "Full form with original presentation box"),
   },
   {
     id: "b2",
-    image: prod("cj-41-g1.jpg"),
+    image: prod("cj-41-g2.jpg"),
     linkSlug: "cj-41-top-grade-tianhuang-stone-limited",
     headline: L("稀有与独一无二的光泽", "稀有與獨一無二的光澤", "Rarity and one-of-a-kind lustre"),
     sub: L("一期一会的收藏邂逅，请勿错过", "一期一會的收藏邂逅，請勿錯過", "A once-in-a-lifetime encounter — don’t miss it"),
@@ -464,34 +463,27 @@ export const banners: Banner[] = [
   },
   {
     id: "b4",
-    image: prod("cj-42-cover.jpg"),
+    image: prod("cj-42-g1.jpg"),
     linkSlug: "cj-42-mid-grade-tianhuang-stone",
     headline: L("中品田黄 · 温润如脂", "中品田黃 · 溫潤如脂", "Mid-grade Tianhuang · Creamy touch"),
     sub: L("天然纹理 · 入门优选", "天然紋理 · 入門優選", "Natural grain — ideal entry piece"),
   },
   {
     id: "b5",
-    image: prod("cj-42-g1.jpg"),
-    linkSlug: "cj-42-mid-grade-tianhuang-stone",
-    headline: L("天然纹样奏出的美感", "天然紋樣奏出的美感", "Beauty written in natural patterns"),
-    sub: L("筋纹、石皮与色脉，各有不可复制的表情", "筋紋、石皮與色脈，各有不可複製的表情", "Vein, skin and hue — each face is unique"),
-  },
-  {
-    id: "b6",
-    image: prod("cj-41-g2.jpg"),
+    image: prod("cj-41-cover.jpg"),
     linkSlug: "cj-41-top-grade-tianhuang-stone-limited",
     headline: L("寿山石与南洋珍藏", "壽山石與南洋珍藏", "Shoushan & Nanyang Collections"),
     sub: L("浏览协会全部藏品", "瀏覽協會全部藏品", "Browse the full association catalogue"),
   },
   {
-    id: "b7",
+    id: "b6",
     image: prod("my-nyonya.jpg"),
     linkSlug: "nyonya-ware",
     headline: L("娘惹彩绘大罐 · 槟城旧藏", "娘惹彩繪大罐 · 檳城舊藏", "Nyonya Enamel Jar · Penang"),
     sub: L("马来西亚热门本土藏品", "馬來西亞熱門本土藏品", "A Malaysian collecting favourite"),
   },
   {
-    id: "b8",
+    id: "b7",
     image: prod("my-keris.jpg"),
     linkSlug: "malay-keris",
     headline: L("马来克力士 · 波浪纹剑刃", "馬來克力士 · 波浪紋劍刃", "Malay Keris · Pamor Blade"),
