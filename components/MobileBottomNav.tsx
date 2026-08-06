@@ -27,7 +27,7 @@ export default function MobileBottomNav({
     { href: `/${lang}`, label: t.nav.home, icon: HomeIcon },
     { href: `/${lang}/products`, label: t.nav.products, icon: GridIcon },
     { href: waUrl, label: "WhatsApp", icon: WaIcon, external: Boolean(wa), highlight: true },
-    { href: `/${lang}/news`, label: t.nav.news, icon: NewsIcon },
+    { href: `/${lang}/posts`, label: t.nav.posts, icon: PostsIcon },
     { href: `/${lang}/contact`, label: t.nav.contact, icon: ContactIcon },
   ];
 
@@ -95,11 +95,13 @@ function WaIcon() {
     </svg>
   );
 }
-function NewsIcon() {
+function PostsIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M4 5h12v14H4zM16 8h4v11a2 2 0 0 1-2 2H6" />
-      <path d="M7 9h6M7 13h6M7 17h4" />
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <circle cx="9" cy="10" r="2" />
+      <path d="M5 16c1.2-2 2.8-3 4-3s2.8 1 4 3" />
+      <path d="M14 10h5M14 14h5" />
     </svg>
   );
 }

@@ -33,7 +33,7 @@ export default function Header({
     setLangOpen(false);
   }, [pathname]);
 
-  const nav = [
+  const desktopNav = [
     { href: `/${lang}`, label: t.nav.home },
     { href: `/${lang}/products`, label: t.nav.products },
     { href: `/${lang}/news`, label: t.nav.news },
@@ -41,6 +41,8 @@ export default function Header({
     { href: `/${lang}/about`, label: t.nav.about },
     { href: `/${lang}/contact`, label: t.nav.contact },
   ];
+  // 手机汉堡：藏家动态改到底栏，避免与底栏重复
+  const mobileNav = desktopNav.filter((n) => n.href !== `/${lang}/posts`);
 
   const swapLang = (target: Locale) => {
     const rest = pathname.split("/").slice(2).join("/");
@@ -90,7 +92,7 @@ export default function Header({
           </Link>
 
           <nav className="hidden lg:flex items-center gap-8">
-            {nav.map((n) => (
+            {desktopNav.map((n) => (
               <Link
                 key={n.href}
                 href={n.href}
@@ -147,7 +149,7 @@ export default function Header({
       {open && (
         <div className="lg:hidden bg-paper border-t border-line">
           <nav className="flex flex-col px-5 py-3">
-            {nav.map((n) => (
+            {mobileNav.map((n) => (
               <Link
                 key={n.href}
                 href={n.href}
