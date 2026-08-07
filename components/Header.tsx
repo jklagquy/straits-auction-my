@@ -65,7 +65,7 @@ export default function Header({
     >
       <div className="mx-auto max-w-[1280px] px-5 lg:px-8">
         <div className="flex items-center justify-between h-[var(--nav-h)]">
-          <Link href={`/${lang}`} className="flex items-center gap-3 min-w-0">
+          <Link href={`/${lang}`} className="flex min-w-0 flex-1 items-center gap-3 pr-2 lg:flex-none">
             {settings.logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -106,9 +106,10 @@ export default function Header({
             ))}
           </nav>
 
-          <div className="flex items-center gap-4">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             <div className="relative">
               <button
+                type="button"
                 onClick={() => setLangOpen((v) => !v)}
                 className={`flex items-center gap-1.5 text-[12px] tracking-wide-2 ${
                   solid ? "text-ink-soft" : "text-paper/90"
@@ -134,14 +135,20 @@ export default function Header({
               )}
             </div>
 
+            {/*
+              Use an SVG icon — empty h-px flex spans collapse to 0-width on iOS Safari,
+              which made the hamburger invisible on real phones while desktop resize still showed it.
+            */}
             <button
-              className="lg:hidden flex flex-col gap-1.5 w-6"
+              type="button"
+              className={`lg:hidden relative z-10 -mr-1 flex h-11 w-11 shrink-0 items-center justify-center ${
+                solid ? "text-ink" : "text-paper"
+              }`}
               onClick={() => setOpen((v) => !v)}
               aria-label="menu"
+              aria-expanded={open}
             >
-              <span className={`h-px transition-all ${solid ? "bg-ink" : "bg-paper"} ${open ? "translate-y-2 rotate-45" : ""}`} />
-              <span className={`h-px transition-all ${solid ? "bg-ink" : "bg-paper"} ${open ? "opacity-0" : ""}`} />
-              <span className={`h-px transition-all ${solid ? "bg-ink" : "bg-paper"} ${open ? "-translate-y-2 -rotate-45" : ""}`} />
+              <MenuIcon open={open} />
             </button>
           </div>
         </div>
@@ -173,6 +180,34 @@ function GlobeIcon() {
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
       <circle cx="12" cy="12" r="9" />
       <path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" />
+    </svg>
+  );
+}
+
+function MenuIcon({ open }: { open: boolean }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M4 7h16"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        className={`origin-center transition-transform duration-200 ${open ? "translate-y-[5px] rotate-45" : ""}`}
+      />
+      <path
+        d="M4 12h16"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        className={`transition-opacity duration-200 ${open ? "opacity-0" : "opacity-100"}`}
+      />
+      <path
+        d="M4 17h16"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        className={`origin-center transition-transform duration-200 ${open ? "-translate-y-[5px] -rotate-45" : ""}`}
+      />
     </svg>
   );
 }
