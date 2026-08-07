@@ -172,23 +172,32 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   return all.find((p) => p.slug === slug) ?? null;
 }
 
+const MIN_FEATURED = 6;
+
+function isPriorityFeaturedFill(p: Product): boolean {
+  const cat = `${p.category.cn} ${p.category.zh} ${p.category.en}`;
+  const lot = p.lotNo || "";
+  return (
+    lot.startsWith("MY-") ||
+    /田黄|田黃|鸡血|雞血|娘惹|克力|峇峇|海峡|海峽|马来|馬來|Tianhuang|Keris|Nyonya|Baba|Straits/i.test(
+      cat
+    )
+  );
+}
+
+/** Homepage 协会精选：优先 featured；不足 MIN_FEATURED 时用田黄/马来本地藏品补足 */
 export async function getFeaturedProducts(): Promise<Product[]> {
-  const rules = await getPriceRules();
-  if (isSupabaseConfigured()) {
-    const sb = createServiceClient();
-    const { data } = await sb
-      .from("products")
-      .select("*")
-      .eq("active", true)
-      .eq("featured", true)
-      .order("sort_order");
-    if (data?.length) {
-      return data.map((row) => toProduct(enrichProduct(mapProductRow(row), rules)));
-    }
-  }
-  return enrichAll(ensureStore())
-    .filter((p) => p.featured)
-    .map(toProduct);
+  const all = await getProducts();
+  const featured = all.filter((p) => p.featured);
+  if (featured.length >= MIN_FEATURED) return featured;
+  const seen = new Set(featured.map((p) => p.id));
+  const fillers = all.filter(
+    (p) => !seen.has(p.id) && isPriorityFeaturedFill(p)
+  );
+  const rest = all.filter(
+    (p) => !seen.has(p.id) && !fillers.some((f) => f.id === p.id)
+  );
+  return [...featured, ...fillers, ...rest].slice(0, MIN_FEATURED);
 }
 
 export async function getArticles(): Promise<Article[]> {
