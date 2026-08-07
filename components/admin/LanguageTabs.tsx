@@ -8,14 +8,23 @@ const TABS = [
   { id: "en", label: "English" },
 ] as const;
 
-export type LangTab = (typeof TABS)[number]["id"];
+type LangTab = (typeof TABS)[number]["id"];
 
+/**
+ * Accept pre-rendered panels from the Server Component.
+ * Do NOT use render-prop children — functions are not serializable across RSC → client.
+ */
 export default function LanguageTabs({
-  children,
+  cn,
+  zh,
+  en,
 }: {
-  children: (lang: LangTab) => ReactNode;
+  cn: ReactNode;
+  zh: ReactNode;
+  en: ReactNode;
 }) {
   const [lang, setLang] = useState<LangTab>("cn");
+  const panels: Record<LangTab, ReactNode> = { cn, zh, en };
 
   return (
     <div className="space-y-4">
@@ -39,7 +48,7 @@ export default function LanguageTabs({
       <div className="space-y-4">
         {TABS.map((t) => (
           <div key={t.id} className={lang === t.id ? "block" : "hidden"}>
-            {children(t.id)}
+            {panels[t.id]}
           </div>
         ))}
       </div>

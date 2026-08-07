@@ -61,34 +61,47 @@ export default async function AdminNewsEditPage({
 
         <div className="rounded-xl border p-4">
           <h2 className="mb-3 text-sm font-semibold">语言版本</h2>
-          <LanguageTabs>
-            {(lang) => (
+          <LanguageTabs
+            cn={
               <div className="space-y-3">
-                <Field
-                  name={`title_${lang}`}
-                  label="标题"
-                  defaultValue={article.title[lang]}
-                />
-                <Field
-                  name={`cat_${lang}`}
-                  label="分类"
-                  defaultValue={article.category[lang]}
-                />
+                <Field name="title_cn" label="标题" defaultValue={article.title.cn} />
+                <Field name="cat_cn" label="分类" defaultValue={article.category.cn} />
+                <Area name="excerpt_cn" label="摘要" rows={3} defaultValue={article.excerpt.cn} />
                 <Area
-                  name={`excerpt_${lang}`}
-                  label="摘要"
-                  rows={3}
-                  defaultValue={article.excerpt[lang]}
-                />
-                <Area
-                  name={`body_${lang}`}
+                  name="body_cn"
                   label="正文（支持换行；可粘贴 HTML 简单排版）"
                   rows={12}
-                  defaultValue={article.body[lang]}
+                  defaultValue={article.body.cn}
                 />
               </div>
-            )}
-          </LanguageTabs>
+            }
+            zh={
+              <div className="space-y-3">
+                <Field name="title_zh" label="标题" defaultValue={article.title.zh} />
+                <Field name="cat_zh" label="分类" defaultValue={article.category.zh} />
+                <Area name="excerpt_zh" label="摘要" rows={3} defaultValue={article.excerpt.zh} />
+                <Area
+                  name="body_zh"
+                  label="正文（支持换行；可粘贴 HTML 简单排版）"
+                  rows={12}
+                  defaultValue={article.body.zh}
+                />
+              </div>
+            }
+            en={
+              <div className="space-y-3">
+                <Field name="title_en" label="标题" defaultValue={article.title.en} />
+                <Field name="cat_en" label="分类" defaultValue={article.category.en} />
+                <Area name="excerpt_en" label="摘要" rows={3} defaultValue={article.excerpt.en} />
+                <Area
+                  name="body_en"
+                  label="正文（支持换行；可粘贴 HTML 简单排版）"
+                  rows={12}
+                  defaultValue={article.body.en}
+                />
+              </div>
+            }
+          />
         </div>
 
         <div className="flex justify-end gap-3">

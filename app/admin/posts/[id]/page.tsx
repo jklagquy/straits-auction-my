@@ -65,23 +65,26 @@ export default async function AdminPostEditPage({
           <MediaUploader name="avatar" defaultValue={post.avatar} folder="avatars" label="头像" />
           <Field name="date" label="日期" type="date" defaultValue={post.date} />
 
-          <LanguageTabs>
-            {(lang) => (
+          <LanguageTabs
+            cn={
               <div className="space-y-3">
-                <Field
-                  name={`author_${lang}`}
-                  label="用户名"
-                  defaultValue={post.author[lang]}
-                />
-                <Area
-                  name={`content_${lang}`}
-                  label="动态内容"
-                  rows={8}
-                  defaultValue={post.content[lang]}
-                />
+                <Field name="author_cn" label="用户名" defaultValue={post.author.cn} />
+                <Area name="content_cn" label="动态内容" rows={8} defaultValue={post.content.cn} />
               </div>
-            )}
-          </LanguageTabs>
+            }
+            zh={
+              <div className="space-y-3">
+                <Field name="author_zh" label="用户名" defaultValue={post.author.zh} />
+                <Area name="content_zh" label="动态内容" rows={8} defaultValue={post.content.zh} />
+              </div>
+            }
+            en={
+              <div className="space-y-3">
+                <Field name="author_en" label="用户名" defaultValue={post.author.en} />
+                <Area name="content_en" label="动态内容" rows={8} defaultValue={post.content.en} />
+              </div>
+            }
+          />
 
           <div className="grid grid-cols-2 gap-4">
             <Field name="likes" label="点赞数" type="number" defaultValue={String(post.likes)} />
