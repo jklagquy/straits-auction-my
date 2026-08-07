@@ -10,9 +10,9 @@ export default async function AdminBannersPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">横幅管理</h1>
-        <Link href="/admin/banners/new" className="bg-zinc-900 text-white px-3 py-1.5 rounded-lg text-sm">
-          新建横幅
+        <h1 className="text-2xl font-bold">轮播图管理</h1>
+        <Link href="/admin/banners/new" className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700">
+          + 新建轮播
         </Link>
       </div>
       <ul className="rounded-xl border bg-white divide-y">

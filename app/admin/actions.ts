@@ -308,6 +308,9 @@ export async function saveArticleAction(formData: FormData) {
   };
   article.date = String(formData.get("date") || article.date);
   article.active = formData.get("active") === "on";
+  if (formData.get("sort_order") != null && formData.get("sort_order") !== "") {
+    article.sortOrder = Number(formData.get("sort_order") || 0);
+  }
   if (!isSupabaseConfigured()) saveAdminStore(store);
   await syncArticle(article as ArticleRecord);
   revalidatePublic();
@@ -358,14 +361,13 @@ export async function savePostAction(formData: FormData) {
     en: String(formData.get("content_en") || ""),
   };
   post.avatar = String(formData.get("avatar") || "");
-  post.image = String(formData.get("image") || "");
   const imagesRaw = String(formData.get("images") || "");
   const images = imagesRaw
     .split(/[\n,]+/)
     .map((s) => s.trim())
     .filter(Boolean);
-  post.images = images.length ? images : post.image ? [post.image] : [];
-  if (!post.image && post.images[0]) post.image = post.images[0];
+  post.images = images;
+  post.image = images[0] || String(formData.get("image") || "");
   post.date = String(formData.get("date") || post.date);
   post.likes = Number(formData.get("likes") || post.likes);
   post.views = Number(formData.get("views") || post.views);
@@ -375,6 +377,86 @@ export async function savePostAction(formData: FormData) {
   await syncPost(post as PostRecord);
   revalidatePublic();
   redirect("/admin/posts");
+}
+
+export async function moveProductSortAction(formData: FormData) {
+  await requireAdmin();
+  const id = String(formData.get("id") || "");
+  const dir = String(formData.get("dir") || "");
+  const store = await loadAdminStore();
+  const sorted = [...store.products].sort(
+    (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
+  );
+  const idx = sorted.findIndex((p) => p.id === id);
+  if (idx < 0) return;
+  const swapWith = dir === "up" ? idx - 1 : idx + 1;
+  if (swapWith < 0 || swapWith >= sorted.length) return;
+  const a = sorted[idx]!;
+  const b = sorted[swapWith]!;
+  const tmp = a.sortOrder;
+  a.sortOrder = b.sortOrder;
+  b.sortOrder = tmp;
+  // If both were 0, assign sequential orders
+  if (a.sortOrder === b.sortOrder) {
+    sorted.forEach((p, i) => {
+      p.sortOrder = i;
+    });
+  }
+  store.products = sorted;
+  if (!isSupabaseConfigured()) saveAdminStore(store);
+  await syncProduct(a);
+  await syncProduct(b);
+  revalidatePublic();
+}
+
+export async function createMarqueeInlineAction(formData: FormData) {
+  await requireAdmin();
+  const store = await loadAdminStore();
+  const msg: MarqueeRecord = {
+    id: crypto.randomUUID(),
+    text: {
+      cn: String(formData.get("text_cn") || ""),
+      zh: String(formData.get("text_zh") || ""),
+      en: String(formData.get("text_en") || ""),
+    },
+    active: true,
+    sortOrder: store.marquee.length,
+  };
+  if (!msg.text.cn && !msg.text.zh && !msg.text.en) redirect("/admin/marquee");
+  store.marquee.unshift(msg);
+  if (!isSupabaseConfigured()) saveAdminStore(store);
+  await syncMarquee(msg);
+  revalidatePublic();
+  redirect("/admin/marquee");
+}
+
+export async function toggleMarqueeActiveAction(formData: FormData) {
+  await requireAdmin();
+  const id = String(formData.get("id") || "");
+  const store = await loadAdminStore();
+  const msg = store.marquee.find((m) => m.id === id);
+  if (!msg) return;
+  msg.active = formData.get("active") === "on";
+  if (!isSupabaseConfigured()) saveAdminStore(store);
+  await syncMarquee(msg);
+  revalidatePublic();
+}
+
+export async function saveMarqueeInlineAction(formData: FormData) {
+  await requireAdmin();
+  const store = await loadAdminStore();
+  const id = String(formData.get("id") || "");
+  const msg = store.marquee.find((m) => m.id === id);
+  if (!msg) return;
+  msg.text = {
+    cn: String(formData.get("text_cn") || ""),
+    zh: String(formData.get("text_zh") || ""),
+    en: String(formData.get("text_en") || ""),
+  };
+  msg.active = formData.get("active") === "on";
+  if (!isSupabaseConfigured()) saveAdminStore(store);
+  await syncMarquee(msg);
+  revalidatePublic();
 }
 
 export async function deletePostAction(formData: FormData) {

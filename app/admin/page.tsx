@@ -7,19 +7,19 @@ export default async function AdminDashboard() {
   const stats = await getDashboardStatsAction();
 
   const cards = [
-    { label: "\u62CD\u54C1", value: stats.products, href: "/admin/products" },
-    { label: "\u65B0\u95FB", value: stats.news, href: "/admin/news" },
-    { label: "\u85CF\u5BB6\u52A8\u6001", value: stats.posts, href: "/admin/posts" },
-    { label: "\u6EDA\u52A8\u516C\u544A", value: stats.marquee, href: "/admin/marquee" },
-    { label: "\u65B0\u8BE2\u76D8", value: stats.inquiriesNew, href: "/admin/inquiries" },
+    { label: "拍品", value: stats.products, href: "/admin/products" },
+    { label: "资讯", value: stats.news, href: "/admin/news" },
+    { label: "藏家动态", value: stats.posts, href: "/admin/posts" },
+    { label: "滚动公告", value: stats.marquee, href: "/admin/marquee" },
+    { label: "新询盘", value: stats.inquiriesNew, href: "/admin/inquiries" },
   ];
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold">{"\u63A7\u5236\u53F0"}</h1>
-        <p className="text-sm text-zinc-500 mt-1">
-          全局每日上浮：{stats.uplift}% · 前台每 5 分钟刷新一次估价 · 数据源：
+        <h1 className="text-2xl font-bold">控制台</h1>
+        <p className="mt-1 text-sm text-zinc-500">
+          欢迎回来！全局每日上浮：{stats.uplift}% · 前台约 5 分钟刷新估价 · 数据源：
           {stats.backend === "supabase" ? "Supabase" : "本地文件"}
         </p>
       </div>
@@ -29,52 +29,69 @@ export default async function AdminDashboard() {
           <Link
             key={c.href}
             href={c.href}
-            className="rounded-xl border bg-white p-5 hover:shadow-md transition-shadow"
+            className="rounded-xl border bg-white p-5 transition-shadow hover:shadow-md"
           >
             <div className="text-sm text-zinc-500">{c.label}</div>
-            <div className="text-3xl font-bold mt-2">{c.value}</div>
+            <div className="mt-2 text-3xl font-bold">{c.value}</div>
           </Link>
         ))}
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-xl border bg-white p-6">
-          <h2 className="font-semibold mb-3">{"\u5FEB\u6377\u5165\u53E3"}</h2>
-          <ul className="space-y-2 text-sm">
+          <h2 className="mb-4 font-semibold">快速操作</h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Link
+              href="/admin/news/new"
+              className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-4 text-sm font-medium text-blue-800 hover:bg-blue-100"
+            >
+              + 新增资讯
+            </Link>
+            <Link
+              href="/admin/posts/new"
+              className="rounded-xl border border-violet-100 bg-violet-50 px-4 py-4 text-sm font-medium text-violet-800 hover:bg-violet-100"
+            >
+              + 新增藏家动态
+            </Link>
+            <Link
+              href="/admin/products"
+              className="rounded-xl border px-4 py-4 text-sm font-medium text-zinc-800 hover:bg-zinc-50"
+            >
+              管理拍品
+            </Link>
+            <Link
+              href="/admin/banners"
+              className="rounded-xl border px-4 py-4 text-sm font-medium text-zinc-800 hover:bg-zinc-50"
+            >
+              管理轮播图
+            </Link>
+          </div>
+        </div>
+
+        <div className="rounded-xl border bg-white p-6 text-sm text-zinc-600">
+          <h2 className="mb-3 font-semibold text-zinc-900">系统与数据</h2>
+          <p>
+            {stats.backend === "supabase"
+              ? "已连接 Supabase：后台读写以云端为准；图片上传至 Storage media 桶。"
+              : "当前为本地 .data/cms-store.json。部署前请配置 Supabase。"}
+          </p>
+          <ul className="mt-4 space-y-2">
             <li>
               <Link href="/admin/price-rules" className="text-blue-700">
-                {"\u914D\u7F6E\u6BCF\u65E5\u4EF7\u683C\u4E0A\u6D6E\u89C4\u5219"}
+                配置每日价格上浮规则
               </Link>
             </li>
             <li>
               <Link href="/admin/settings" className="text-blue-700">
-                {"WhatsApp \u4E0E\u5728\u7EBF\u5BA2\u670D\u8BBE\u7F6E"}
-              </Link>
-            </li>
-            <li>
-              <Link href="/admin/products" className="text-blue-700">
-                {"\u7F16\u8F91\u62CD\u54C1\u57FA\u7840\u4EF7\u683C"}
+                WhatsApp / Logo / 会员互动权限
               </Link>
             </li>
             <li>
               <Link href="/cn" target="_blank" className="text-blue-700">
-                {"\u9884\u89C8\u524D\u53F0 /cn"}
+                预览前台 /cn
               </Link>
             </li>
           </ul>
-        </div>
-        <div className="rounded-xl border bg-white p-6 text-sm text-zinc-600">
-          <h2 className="font-semibold text-zinc-900 mb-3">数据存储</h2>
-          <p>
-            {stats.backend === "supabase"
-              ? "已连接 Supabase：后台读写以云端为准；图片上传至 Storage media 桶。"
-              : "当前为本地 .data/cms-store.json。部署前请配置 Supabase 并执行 migrations/001 + 002。"}
-          </p>
-          <p className="mt-2">
-            <Link href="/admin/settings" className="text-blue-700">
-              上传 Logo / 修改公司信息 →
-            </Link>
-          </p>
         </div>
       </div>
     </div>

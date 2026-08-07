@@ -5,6 +5,8 @@ import { loadAdminStore } from "@/lib/cms/repository";
 import { getCommentCount } from "@/lib/cms/comment-store";
 import { savePostAction } from "../../actions";
 import MediaUploader from "@/components/admin/MediaUploader";
+import MultiImageUploader from "@/components/admin/MultiImageUploader";
+import LanguageTabs from "@/components/admin/LanguageTabs";
 
 export default async function AdminPostEditPage({
   params,
@@ -22,7 +24,7 @@ export default async function AdminPostEditPage({
         avatar: "",
         content: { cn: "", zh: "", en: "" },
         image: "",
-        images: [],
+        images: [] as string[],
         date: new Date().toISOString().slice(0, 10),
         likes: 0,
         views: 0,
@@ -34,57 +36,106 @@ export default async function AdminPostEditPage({
     : store.posts.find((p) => p.id === id);
   if (!post) notFound();
   const commentCount = isNew ? 0 : await getCommentCount(post.id);
-  const imagesText = (post.images?.length ? post.images : post.image ? [post.image] : []).join(
-    "\n"
-  );
+  const images = post.images?.length ? post.images : post.image ? [post.image] : [];
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="mx-auto max-w-4xl space-y-6">
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold">{isNew ? "新建动态" : "编辑动态"}</h1>
-        {!isNew && (
-          <Link
-            href={`/admin/posts/${post.id}/comments`}
-            className="text-sm rounded-lg border px-3 py-2 hover:bg-zinc-50"
-          >
-            管理评论（{commentCount}）
+        <h1 className="text-2xl font-bold">{isNew ? "新增藏家动态" : "编辑藏家动态"}</h1>
+        <div className="flex gap-3">
+          {!isNew && (
+            <Link
+              href={`/admin/posts/${post.id}/comments`}
+              className="rounded-lg border px-3 py-2 text-sm hover:bg-zinc-50"
+            >
+              管理评论（{commentCount}）
+            </Link>
+          )}
+          <Link href="/admin/posts" className="rounded-lg border px-3 py-2 text-sm hover:bg-zinc-50">
+            返回列表
           </Link>
-        )}
-      </div>
-      <form action={savePostAction} className="space-y-4 rounded-xl border bg-white p-6">
-        <input type="hidden" name="id" value={post.id} />
-        <MediaUploader name="image" defaultValue={post.image} folder="posts" label="封面图（列表用）" />
-        <Area
-          name="images"
-          label="多图相册（每行一个图片 URL，详情页九宫格）"
-          defaultValue={imagesText}
-        />
-        <MediaUploader name="avatar" defaultValue={post.avatar} folder="avatars" label="头像" />
-        <Field name="date" label="日期" type="date" defaultValue={post.date} />
-        <Field name="author_cn" label="作者（简）" defaultValue={post.author.cn} />
-        <Field name="author_zh" label="作者（繁）" defaultValue={post.author.zh} />
-        <Field name="author_en" label="作者（英文）" defaultValue={post.author.en} />
-        <Area name="content_cn" label="内容（简）" defaultValue={post.content.cn} />
-        <Area name="content_zh" label="内容（繁）" defaultValue={post.content.zh} />
-        <Area name="content_en" label="内容（英文）" defaultValue={post.content.en} />
-        <div className="grid grid-cols-2 gap-4">
-          <Field name="likes" label="点赞数" type="number" defaultValue={String(post.likes)} />
-          <Field name="views" label="浏览量" type="number" defaultValue={String(post.views)} />
         </div>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" name="active" defaultChecked={post.active} /> 上架
-        </label>
-        <button type="submit" className="bg-zinc-900 text-white px-4 py-2 rounded-lg text-sm">保存</button>
+      </div>
+
+      <form action={savePostAction} className="grid gap-6 lg:grid-cols-2">
+        <input type="hidden" name="id" value={post.id} />
+
+        <div className="space-y-4 rounded-xl border bg-white p-6">
+          <h2 className="font-semibold">发布者信息</h2>
+          <MediaUploader name="avatar" defaultValue={post.avatar} folder="avatars" label="头像" />
+          <Field name="date" label="日期" type="date" defaultValue={post.date} />
+
+          <LanguageTabs>
+            {(lang) => (
+              <div className="space-y-3">
+                <Field
+                  name={`author_${lang}`}
+                  label="用户名"
+                  defaultValue={post.author[lang]}
+                />
+                <Area
+                  name={`content_${lang}`}
+                  label="动态内容"
+                  rows={8}
+                  defaultValue={post.content[lang]}
+                />
+              </div>
+            )}
+          </LanguageTabs>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Field name="likes" label="点赞数" type="number" defaultValue={String(post.likes)} />
+            <Field name="views" label="浏览量" type="number" defaultValue={String(post.views)} />
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" name="active" defaultChecked={post.active} /> 启用此动态
+          </label>
+        </div>
+
+        <div className="space-y-4 rounded-xl border bg-white p-6">
+          <h2 className="font-semibold">动态图片</h2>
+          <MultiImageUploader
+            name="images"
+            defaultUrls={images}
+            folder="posts"
+            label="选择图片（可多选），详情页九宫格展示"
+          />
+          <p className="text-xs text-zinc-400">第一张图会自动作为列表封面。</p>
+        </div>
+
+        <div className="lg:col-span-2 flex justify-center">
+          <button
+            type="submit"
+            className="rounded-lg bg-blue-600 px-8 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            {isNew ? "创建动态" : "保存修改"}
+          </button>
+        </div>
       </form>
     </div>
   );
 }
 
-function Field({ name, label, defaultValue, type = "text" }: { name: string; label: string; defaultValue?: string; type?: string }) {
+function Field({
+  name,
+  label,
+  defaultValue,
+  type = "text",
+}: {
+  name: string;
+  label: string;
+  defaultValue?: string;
+  type?: string;
+}) {
   return (
     <div>
-      <label className="text-xs text-zinc-500 block mb-1">{label}</label>
-      <input name={name} type={type} defaultValue={defaultValue} className="w-full border rounded px-3 py-2 text-sm" />
+      <label className="mb-1 block text-xs text-zinc-500">{label}</label>
+      <input
+        name={name}
+        type={type}
+        defaultValue={defaultValue}
+        className="w-full rounded border px-3 py-2 text-sm"
+      />
     </div>
   );
 }
@@ -102,12 +153,12 @@ function Area({
 }) {
   return (
     <div>
-      <label className="text-xs text-zinc-500 block mb-1">{label}</label>
+      <label className="mb-1 block text-xs text-zinc-500">{label}</label>
       <textarea
         name={name}
-        rows={name === "images" ? 8 : rows}
+        rows={rows}
         defaultValue={defaultValue}
-        className="w-full border rounded px-3 py-2 text-sm font-mono"
+        className="w-full rounded border px-3 py-2 text-sm"
       />
     </div>
   );
