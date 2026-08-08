@@ -18,7 +18,7 @@ function normalizeStore(raw: CmsStore): CmsStore {
   if (!s.brandSub) {
     s.brandSub = { cn: "WACA", zh: "WACA", en: "WACA" };
   }
-  if (s.logoUrl == null) s.logoUrl = "";
+  if (s.logoUrl == null || s.logoUrl === "") s.logoUrl = "/brand/waca-mark.png";
   if (!s.company) {
     s.company = {
       cn: "万国古董文博协会",

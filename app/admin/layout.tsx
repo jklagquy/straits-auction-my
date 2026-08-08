@@ -27,9 +27,17 @@ export default async function AdminLayout({
     <div className="min-h-screen bg-zinc-100 text-zinc-900" lang="zh-CN">
       <div className="flex min-h-screen">
         <aside className="hidden w-56 shrink-0 flex-col border-r border-zinc-200 bg-white lg:flex">
-          <div className="border-b px-4 py-4">
-            <div className="text-sm font-semibold tracking-wide">万国文博协会 · 后台</div>
-            <div className="mt-0.5 text-xs text-zinc-400">WACA Admin</div>
+          <div className="flex items-center gap-2.5 border-b px-4 py-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/brand/waca-mark.png"
+              alt="WACA"
+              className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-zinc-200"
+            />
+            <div>
+              <div className="text-sm font-semibold tracking-wide">万国文博协会 · 后台</div>
+              <div className="mt-0.5 text-xs text-zinc-400">WACA Admin</div>
+            </div>
           </div>
           <nav className="flex-1 space-y-0.5 p-3 text-sm">
             {nav.map((n) => (
@@ -52,7 +60,11 @@ export default async function AdminLayout({
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="border-b bg-white lg:hidden">
             <div className="flex items-center justify-between gap-3 px-4 py-3">
-              <div className="text-sm font-semibold">WACA 后台</div>
+              <div className="flex items-center gap-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/brand/waca-mark.png" alt="" className="h-7 w-7 rounded-full object-cover" />
+                <div className="text-sm font-semibold">WACA 后台</div>
+              </div>
               <form action={logoutAction}>
                 <button type="submit" className="text-sm text-red-600">
                   退出

@@ -26,14 +26,12 @@ export default function Footer({
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-12 md:gap-20">
           <div className="max-w-md">
             <div className="flex items-center gap-3">
-              {settings.logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={settings.logoUrl}
-                  alt={brand}
-                  className="h-10 w-auto object-contain brightness-0 invert opacity-90"
-                />
-              ) : null}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={settings.logoUrl || "/brand/waca-mark.png"}
+                alt={brand}
+                className="h-12 w-12 shrink-0 rounded-full object-cover ring-1 ring-gold/50"
+              />
               <div>
                 <div className="font-display text-2xl tracking-wide-2 text-paper">{brand}</div>
                 <div className="eyebrow mt-2 !text-gold-soft">{brandSub}</div>

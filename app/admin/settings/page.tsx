@@ -51,7 +51,12 @@ export default async function AdminSettingsPage() {
         </label>
 
         <h2 className="font-semibold pt-4">Logo</h2>
-        <MediaUploader name="logo_url" defaultValue={s.logoUrl} folder="logo" label="上传或粘贴 Logo URL" />
+        <MediaUploader
+          name="logo_url"
+          defaultValue={s.logoUrl || "/brand/waca-mark.png"}
+          folder="logo"
+          label="上传或粘贴 Logo URL（默认 /brand/waca-mark.png）"
+        />
 
         <h2 className="font-semibold pt-4">品牌名称</h2>
         <label className="text-xs text-zinc-500 block">简体</label>

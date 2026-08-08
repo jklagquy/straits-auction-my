@@ -25,7 +25,16 @@ export default function AdminLoginPage() {
         }}
         className="w-full max-w-sm bg-white border rounded-xl p-8 shadow-sm space-y-4"
       >
-        <h1 className="text-xl font-semibold text-center">{"\u7BA1\u7406\u540E\u53F0\u767B\u5F55"}</h1>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/brand/waca-mark.png"
+          alt="WACA"
+          className="mx-auto h-16 w-16 rounded-full object-cover ring-1 ring-zinc-200"
+        />
+        <div className="text-center">
+          <h1 className="text-xl font-semibold">{"\u7BA1\u7406\u540E\u53F0\u767B\u5F55"}</h1>
+          <p className="mt-1 text-xs text-zinc-500">万国古董文博协会 · WACA</p>
+        </div>
         <p className="text-xs text-zinc-500 text-center">
           {"\u5BC6\u7801\u89C1 .env.local \u4E2D\u7684 ADMIN_PASSWORD"}
         </p>

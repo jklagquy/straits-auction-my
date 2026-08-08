@@ -65,15 +65,13 @@ export default function Header({
     >
       <div className="mx-auto max-w-[1280px] px-5 lg:px-8">
         <div className="flex items-center justify-between h-[var(--nav-h)]">
-          <Link href={`/${lang}`} className="flex min-w-0 flex-1 items-center gap-3 pr-2 lg:flex-none">
-            {settings.logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={settings.logoUrl}
-                alt={brand}
-                className="h-10 w-auto max-w-[140px] object-contain"
-              />
-            ) : null}
+          <Link href={`/${lang}`} className="flex min-w-0 flex-1 items-center gap-2.5 pr-2 sm:gap-3 lg:flex-none">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={settings.logoUrl || "/brand/waca-mark.png"}
+              alt={brand}
+              className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-gold/40 sm:h-10 sm:w-10"
+            />
             <span className="flex flex-col leading-none min-w-0">
               <span
                 className={`font-display text-lg sm:text-xl lg:text-2xl tracking-wide-2 truncate max-w-[10rem] sm:max-w-[16rem] lg:max-w-none ${

@@ -110,7 +110,7 @@ export function buildDefaultStore(): CmsStore {
         "World Antique Cultural-Heritage Association",
         "World Antique Cultural-Heritage Association"
       ),
-      logoUrl: "",
+      logoUrl: "/brand/waca-mark.png",
       company: L("万国古董文博协会", "萬國古董文博協會", "World Antique Cultural-Heritage Association"),
       whatsappNumber: "60321488800",
       tawkPropertyId: "",

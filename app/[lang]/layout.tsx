@@ -42,10 +42,12 @@ export async function generateMetadata({
       siteName: brand,
       locale: lang === "en" ? "en_MY" : lang === "zh" ? "zh_TW" : "zh_CN",
       url: `/${lang}`,
+      images: [{ url: "/brand/waca-og.png", width: 1200, height: 630, alt: brand }],
     },
     twitter: {
       title,
       description,
+      images: ["/brand/waca-og.png"],
     },
   };
 }

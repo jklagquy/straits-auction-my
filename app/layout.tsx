@@ -22,13 +22,17 @@ const SITE_DESC =
   "万国古董文博协会（World Antique Cultural-Heritage Association）— 私人收藏与文博交流平台。";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://straits-auction-my.vercel.app"),
+  metadataBase: new URL("https://waca-world.org"),
   title: {
     default: SITE_TITLE,
     template: `%s · ${SITE_NAME}`,
   },
   description: SITE_DESC,
   applicationName: SITE_NAME,
+  icons: {
+    icon: [{ url: "/brand/waca-mark.png", type: "image/png" }],
+    apple: [{ url: "/apple-icon.png", type: "image/png" }],
+  },
   openGraph: {
     type: "website",
     locale: "zh_CN",
@@ -36,11 +40,13 @@ export const metadata: Metadata = {
     title: SITE_TITLE,
     description: SITE_DESC,
     url: "/",
+    images: [{ url: "/brand/waca-og.png", width: 1200, height: 630, alt: SITE_TITLE }],
   },
   twitter: {
     card: "summary_large_image",
     title: SITE_TITLE,
     description: SITE_DESC,
+    images: ["/brand/waca-og.png"],
   },
 };
 
