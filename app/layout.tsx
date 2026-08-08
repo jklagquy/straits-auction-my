@@ -30,8 +30,12 @@ export const metadata: Metadata = {
   description: SITE_DESC,
   applicationName: SITE_NAME,
   icons: {
-    icon: [{ url: "/brand/waca-mark.png", type: "image/png" }],
-    apple: [{ url: "/apple-icon.png", type: "image/png" }],
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/icon.png", type: "image/png", sizes: "48x48" },
+    ],
+    apple: [{ url: "/apple-icon.png", type: "image/png", sizes: "180x180" }],
+    shortcut: "/favicon.ico",
   },
   openGraph: {
     type: "website",
