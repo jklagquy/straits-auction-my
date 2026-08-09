@@ -30,6 +30,12 @@ export function priceSeed(
   return product.basePriceLow > 0 ? product.basePriceLow : product.basePriceHigh;
 }
 
+export function originalPrice(
+  product: Pick<ProductRecord, "basePriceLow" | "basePriceHigh">
+): number {
+  return product.basePriceLow > 0 ? product.basePriceLow : product.basePriceHigh;
+}
+
 /** Single-price uplift from the seed price. */
 export function computeCurrentPrice(
   base: number,
@@ -106,6 +112,11 @@ export function enrichProduct<T extends Omit<ProductRecord, "displayPriceLow" | 
   };
 }
 
+/**
+ * Build a climbing price series from 原价 → 当前价.
+ * Uses daily uplift shape when possible; always ends at the live display price
+ * so the chart stays in sync with the strikethrough / current price UI.
+ */
 export function buildPriceHistory(
   product: Pick<
     ProductRecord,
@@ -122,18 +133,70 @@ export function buildPriceHistory(
   days = 30
 ): PriceSnapshot[] {
   const uplift = resolveUplift(product, rules);
-  const seed = priceSeed(product);
-  const out: PriceSnapshot[] = [];
+  const origin = originalPrice(product);
   const today = new Date();
+  const current = computeCurrentPrice(
+    priceSeed(product),
+    uplift,
+    today,
+    product.priceCapHigh
+  );
+  const startKey = (uplift.startAt || today.toISOString()).slice(0, 10);
+  const totalClimbDays = Math.max(1, daysSince(startKey, today));
+
+  const out: PriceSnapshot[] = [];
   for (let i = days - 1; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
-    const price = computeCurrentPrice(seed, uplift, d, product.priceCapHigh);
+    const date = d.toISOString().slice(0, 10);
+
+    let price: number;
+    if (origin <= 0) {
+      price = current;
+    } else if (date < startKey) {
+      // Before uplift start: flat at original
+      price = origin;
+    } else if (!uplift.enabled || current <= origin) {
+      // No uplift / no gain yet: step up to current on/after start
+      price = date >= startKey ? current : origin;
+    } else {
+      // Climb from original → current across days since uplift start
+      const elapsed = daysSince(startKey, d);
+      const t = Math.min(1, elapsed / totalClimbDays);
+
+      // Prefer real daily-uplift shape from original, scaled to hit `current` today
+      const raw = computeCurrentPrice(origin, uplift, d, product.priceCapHigh);
+      const rawToday = computeCurrentPrice(
+        origin,
+        uplift,
+        today,
+        product.priceCapHigh
+      );
+
+      if (rawToday > origin + 0.01) {
+        const progress = (raw - origin) / (rawToday - origin);
+        price = origin + (current - origin) * Math.min(1, Math.max(0, progress));
+      } else {
+        // Uplift from original is still flat (e.g. seed is manual) — linear climb
+        price = origin + (current - origin) * t;
+      }
+    }
+
     out.push({
-      date: d.toISOString().slice(0, 10),
-      priceLow: price,
-      priceHigh: price,
+      date,
+      priceLow: roundMoney(price),
+      priceHigh: roundMoney(price),
     });
   }
+
+  // Hard-align last point with live current price
+  if (out.length && current > 0) {
+    out[out.length - 1] = {
+      ...out[out.length - 1],
+      priceLow: roundMoney(current),
+      priceHigh: roundMoney(current),
+    };
+  }
+
   return out;
 }

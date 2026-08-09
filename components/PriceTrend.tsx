@@ -3,6 +3,8 @@ import type { PriceSnapshot } from "@/lib/cms/types";
 export default function PriceTrend({
   history,
   labels,
+  originalPrice,
+  currentPrice,
 }: {
   history: PriceSnapshot[];
   currency?: string;
@@ -12,6 +14,10 @@ export default function PriceTrend({
     price?: string;
     change?: string;
   };
+  /** 原价 — used for % when history is short/flat */
+  originalPrice?: number;
+  /** 当前价 */
+  currentPrice?: number;
 }) {
   if (history.length < 2) return null;
 
@@ -27,17 +33,26 @@ export default function PriceTrend({
       const y =
         max === min
           ? h / 2
-          : h - ((snap.priceLow - min) / range) * (h - 10) - 4;
+          : h - ((snap.priceLow - min) / range) * (h - 12) - 6;
       return `${x},${y}`;
     })
     .join(" ");
 
   const latest = history[history.length - 1];
   const first = history[0];
-  const deltaPct =
-    first.priceLow > 0
-      ? ((latest.priceLow - first.priceLow) / first.priceLow) * 100
-      : 0;
+
+  // Prefer 原价→当前价 for the badge (matches what users see above the chart)
+  let deltaPct = 0;
+  if (
+    originalPrice != null &&
+    originalPrice > 0 &&
+    currentPrice != null &&
+    currentPrice > 0
+  ) {
+    deltaPct = ((currentPrice - originalPrice) / originalPrice) * 100;
+  } else if (first.priceLow > 0) {
+    deltaPct = ((latest.priceLow - first.priceLow) / first.priceLow) * 100;
+  }
 
   return (
     <div className="mt-6 border border-white/10 rounded-sm bg-ink-soft/20 px-4 py-4">
@@ -56,7 +71,7 @@ export default function PriceTrend({
         <polyline
           fill="none"
           stroke="currentColor"
-          strokeWidth="1.75"
+          strokeWidth="2"
           strokeLinejoin="round"
           strokeLinecap="round"
           className="text-gold-soft"

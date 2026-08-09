@@ -384,29 +384,18 @@ export async function getPriceHistory(
 ): Promise<PriceSnapshot[]> {
   const { buildPriceHistory } = await import("./pricing");
   const rules = await getPriceRules();
+  // Always compute live history from original → current so the chart
+  // stays in sync with admin price edits (ignore stale price_snapshots).
   if (isSupabaseConfigured()) {
     const sb = createServiceClient();
-    const { data: snaps } = await sb
-      .from("price_snapshots")
+    const { data: prod } = await sb
+      .from("products")
       .select("*")
-      .eq("product_id", productId)
-      .order("snapshot_date", { ascending: false })
-      .limit(days);
-    if (snaps?.length) {
-      return snaps
-        .map((s) => ({
-          date: s.snapshot_date,
-          priceLow: Number(s.price_low),
-          priceHigh: Number(s.price_high),
-        }))
-        .reverse();
-    }
-    const { data: prod } = await sb.from("products").select("*").eq("id", productId).single();
+      .eq("id", productId)
+      .single();
     if (prod) return buildPriceHistory(mapProductRow(prod), rules, days);
   }
   const store = ensureStore();
-  const stored = store.priceSnapshots[productId];
-  if (stored?.length) return stored.slice(-days);
   const prod = store.products.find((p) => p.id === productId);
   if (!prod) return [];
   return buildPriceHistory(prod, rules, days);

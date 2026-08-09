@@ -122,6 +122,8 @@ export default async function ProductDetail({
               <PriceTrend
                 history={history}
                 currency={product.currency || "MYR"}
+                originalPrice={product.originalPrice}
+                currentPrice={product.currentPrice ?? product.displayPriceLow}
                 labels={{
                   title: t.common.priceHistory,
                   date: t.common.date,
