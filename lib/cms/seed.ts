@@ -45,6 +45,7 @@ function mapProduct(p: Product, i: number) {
     basePriceHigh: high > 0 ? high : low,
     stockQuantity: p.stockQuantity ?? 0,
     manualCurrentPrice: null,
+    priceTrail: [],
     currency: "MYR",
     upliftEnabled: null,
     upliftMode: null,

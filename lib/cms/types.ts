@@ -59,6 +59,8 @@ export type ProductRecord = {
    * When null, uplift is computed from basePriceLow (原价).
    */
   manualCurrentPrice: number | null;
+  /** Admin price-edit waypoints for multi-step trend charts */
+  priceTrail: { date: string; price: number }[];
   currency: string;
   upliftEnabled: boolean | null;
   upliftMode: UpliftMode | null;

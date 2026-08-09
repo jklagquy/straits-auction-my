@@ -648,10 +648,11 @@ function mapPostRecord(row: Record<string, unknown>): PostRecord {
 /* ---------- row mappers ---------- */
 
 function mapProductRow(row: Record<string, unknown>): Omit<ProductRecord, "displayPriceLow" | "displayPriceHigh" | "estimate"> {
-  const { stockQuantity, manualCurrentPrice, specs } = readProductMetaFromRow(
-    row.specs as ProductRecord["specs"],
-    row.stock_quantity
-  );
+  const { stockQuantity, manualCurrentPrice, priceTrail, specs } =
+    readProductMetaFromRow(
+      row.specs as ProductRecord["specs"],
+      row.stock_quantity
+    );
   return {
     id: String(row.id),
     slug: String(row.slug),
@@ -669,6 +670,7 @@ function mapProductRow(row: Record<string, unknown>): Omit<ProductRecord, "displ
     basePriceHigh: Number(row.base_price_high),
     stockQuantity,
     manualCurrentPrice,
+    priceTrail,
     currency: String(row.currency || "MYR"),
     upliftEnabled: row.uplift_enabled as boolean | null,
     upliftMode: row.uplift_mode as ProductRecord["upliftMode"],

@@ -65,6 +65,7 @@ export async function syncProduct(
     product.manualCurrentPrice != null && product.manualCurrentPrice > 0
       ? product.manualCurrentPrice
       : null;
+  const trail = Array.isArray(product.priceTrail) ? product.priceTrail : [];
   const payload: Record<string, unknown> = {
     id: product.id,
     slug: product.slug,
@@ -83,8 +84,8 @@ export async function syncProduct(
     description_en: product.description.en,
     image: product.image,
     gallery: product.gallery,
-    // Persist stock + manual current price in specs meta (works without DB migration)
-    specs: withProductMetaInSpecs(product.specs || [], stock, manual),
+    // Persist stock + manual current price + trail in specs meta
+    specs: withProductMetaInSpecs(product.specs || [], stock, manual, trail),
     featured: product.featured,
     status: product.status,
     base_price_low: product.basePriceLow,

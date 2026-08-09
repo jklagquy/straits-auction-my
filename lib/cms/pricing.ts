@@ -1,4 +1,5 @@
 import type { PriceRules, PriceSnapshot, ProductRecord, UpliftMode } from "./types";
+import type { PriceTrailPoint } from "./stock";
 
 export function daysSince(startIso: string, now = new Date()): number {
   const start = new Date(startIso.slice(0, 10) + "T00:00:00");
@@ -53,7 +54,7 @@ export function computeCurrentPrice(
   return roundMoney(current);
 }
 
-/** @deprecated Prefer computeCurrentPrice — kept for callers still passing a range. */
+/** @deprecated Prefer computeCurrentPrice */
 export function computeDisplayPrices(
   baseLow: number,
   baseHigh: number,
@@ -106,16 +107,24 @@ export function enrichProduct<T extends Omit<ProductRecord, "displayPriceLow" | 
       product.manualCurrentPrice != null && product.manualCurrentPrice > 0
         ? product.manualCurrentPrice
         : null,
+    priceTrail: Array.isArray(product.priceTrail) ? product.priceTrail : [],
     displayPriceLow: current,
     displayPriceHigh: current,
     estimate: formatMoney(current, currency),
   };
 }
 
+function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+function lerp(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
+}
+
 /**
- * Build a climbing price series from 原价 → 当前价.
- * Uses daily uplift shape when possible; always ends at the live display price
- * so the chart stays in sync with the strikethrough / current price UI.
+ * Build a smooth climbing series from 原价 → waypoints → 当前价.
+ * Admin price edits become visible steps/ramps (not a single identical step shape).
  */
 export function buildPriceHistory(
   product: Pick<
@@ -123,6 +132,7 @@ export function buildPriceHistory(
     | "basePriceLow"
     | "basePriceHigh"
     | "manualCurrentPrice"
+    | "priceTrail"
     | "upliftEnabled"
     | "upliftMode"
     | "upliftValue"
@@ -135,14 +145,38 @@ export function buildPriceHistory(
   const uplift = resolveUplift(product, rules);
   const origin = originalPrice(product);
   const today = new Date();
+  const todayKey = today.toISOString().slice(0, 10);
   const current = computeCurrentPrice(
     priceSeed(product),
     uplift,
     today,
     product.priceCapHigh
   );
-  const startKey = (uplift.startAt || today.toISOString()).slice(0, 10);
-  const totalClimbDays = Math.max(1, daysSince(startKey, today));
+  const startKey = (uplift.startAt || todayKey).slice(0, 10);
+
+  // Waypoints: original at start → admin trail → live current today
+  const trail = (product.priceTrail || []) as PriceTrailPoint[];
+  const waypoints: PriceTrailPoint[] = [
+    { date: startKey, price: origin > 0 ? origin : current },
+    ...trail.filter((p) => p.date >= startKey && p.price > 0),
+    { date: todayKey, price: current > 0 ? current : origin },
+  ]
+    // Sort + collapse same-day keeping the latest price
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .reduce<PriceTrailPoint[]>((acc, p) => {
+      const last = acc[acc.length - 1];
+      if (last && last.date === p.date) {
+        acc[acc.length - 1] = p;
+      } else {
+        acc.push(p);
+      }
+      return acc;
+    }, []);
+
+  // Ensure first price is original when available
+  if (waypoints.length && origin > 0) {
+    waypoints[0] = { ...waypoints[0], price: origin };
+  }
 
   const out: PriceSnapshot[] = [];
   for (let i = days - 1; i >= 0; i--) {
@@ -151,34 +185,30 @@ export function buildPriceHistory(
     const date = d.toISOString().slice(0, 10);
 
     let price: number;
-    if (origin <= 0) {
-      price = current;
-    } else if (date < startKey) {
-      // Before uplift start: flat at original
-      price = origin;
-    } else if (!uplift.enabled || current <= origin) {
-      // No uplift / no gain yet: step up to current on/after start
-      price = date >= startKey ? current : origin;
+    if (date < waypoints[0]?.date) {
+      price = origin > 0 ? origin : current;
     } else {
-      // Climb from original → current across days since uplift start
-      const elapsed = daysSince(startKey, d);
-      const t = Math.min(1, elapsed / totalClimbDays);
-
-      // Prefer real daily-uplift shape from original, scaled to hit `current` today
-      const raw = computeCurrentPrice(origin, uplift, d, product.priceCapHigh);
-      const rawToday = computeCurrentPrice(
-        origin,
-        uplift,
-        today,
-        product.priceCapHigh
-      );
-
-      if (rawToday > origin + 0.01) {
-        const progress = (raw - origin) / (rawToday - origin);
-        price = origin + (current - origin) * Math.min(1, Math.max(0, progress));
+      // Find surrounding waypoints and ease between them
+      let left = waypoints[0];
+      let right = waypoints[waypoints.length - 1];
+      for (let w = 0; w < waypoints.length; w++) {
+        const pt = waypoints[w]!;
+        if (pt.date <= date) left = pt;
+        if (pt.date >= date) {
+          right = pt;
+          break;
+        }
+      }
+      if (left.date === right.date) {
+        price = right.price;
       } else {
-        // Uplift from original is still flat (e.g. seed is manual) — linear climb
-        price = origin + (current - origin) * t;
+        const span = Math.max(
+          1,
+          daysSince(left.date, new Date(right.date + "T00:00:00"))
+        );
+        const elapsed = daysSince(left.date, d);
+        const t = easeInOutCubic(Math.min(1, Math.max(0, elapsed / span)));
+        price = lerp(left.price, right.price, t);
       }
     }
 
@@ -189,10 +219,9 @@ export function buildPriceHistory(
     });
   }
 
-  // Hard-align last point with live current price
   if (out.length && current > 0) {
     out[out.length - 1] = {
-      ...out[out.length - 1],
+      ...out[out.length - 1]!,
       priceLow: roundMoney(current),
       priceHigh: roundMoney(current),
     };

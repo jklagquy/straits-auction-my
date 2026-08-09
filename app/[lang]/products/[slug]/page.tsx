@@ -129,6 +129,7 @@ export default async function ProductDetail({
                   date: t.common.date,
                   price: t.common.currentPrice,
                   change: t.common.change,
+                  original: t.common.originalPrice,
                 }}
               />
             </div>

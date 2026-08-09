@@ -158,6 +158,7 @@ export async function saveProductAction(formData: FormData) {
       basePriceHigh: 0,
       stockQuantity: 0,
       manualCurrentPrice: null,
+      priceTrail: [],
       currency: "MYR",
       upliftEnabled: null,
       upliftMode: null,
@@ -195,15 +196,21 @@ export async function saveProductAction(formData: FormData) {
       .filter(Boolean);
   }
   // 原价 = base_low; 当前价 seed = current_price (manual)
-  const { parseStockFormValue } = await import("@/lib/cms/stock");
+  const { appendPriceTrail, parseStockFormValue } = await import(
+    "@/lib/cms/stock"
+  );
   const base = Number(formData.get("base_low") || 0);
   p.basePriceLow = base;
   const currentRaw = String(formData.get("current_price") ?? "").trim();
   const currentPrice = currentRaw === "" ? NaN : Number(currentRaw);
+  const prevManual = p.manualCurrentPrice;
   if (Number.isFinite(currentPrice) && currentPrice > 0) {
     p.manualCurrentPrice = currentPrice;
-    // Keep base_high in sync with current seed for legacy fields
     p.basePriceHigh = currentPrice;
+    // Record waypoint so the public chart shows each admin price edit
+    if (prevManual == null || Math.abs(prevManual - currentPrice) >= 0.5) {
+      p.priceTrail = appendPriceTrail(p.priceTrail || [], currentPrice);
+    }
   } else {
     p.manualCurrentPrice = null;
     p.basePriceHigh = base;
@@ -256,6 +263,7 @@ export async function createProductAction() {
     basePriceHigh: 0,
     stockQuantity: 0,
     manualCurrentPrice: null,
+    priceTrail: [],
     currency: "MYR",
     upliftEnabled: null,
     upliftMode: null,
