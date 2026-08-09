@@ -5,33 +5,44 @@ import { loadAdminStore } from "@/lib/cms/repository";
 import { enrichProduct } from "@/lib/cms/pricing";
 import PricePreview from "./PricePreview";
 import MediaUploader from "@/components/admin/MediaUploader";
+import SavedBanner from "@/components/admin/SavedBanner";
+import SaveButton from "@/components/admin/SaveButton";
 
 export default async function AdminProductEditPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ saved?: string }>;
 }) {
   await requireAdminPage();
   const { id } = await params;
+  const { saved } = await searchParams;
   const store = await loadAdminStore();
   const product = store.products.find((p) => p.id === id);
   if (!product) notFound();
   const live = enrichProduct(product, store.priceRules);
+  const original = product.basePriceLow || product.basePriceHigh || 0;
+  const currentSeed =
+    product.manualCurrentPrice && product.manualCurrentPrice > 0
+      ? product.manualCurrentPrice
+      : live.displayPriceLow || original;
 
   return (
     <div className="max-w-3xl space-y-6">
       <h1 className="text-2xl font-bold">编辑拍品 · {product.lotNo}</h1>
+      <SavedBanner saved={saved} />
       <div className="rounded-lg border bg-amber-50 p-4 text-sm space-y-1">
         <div>
           原价：
           <span className="text-zinc-400 line-through ml-1">
-            RM {(product.basePriceLow || product.basePriceHigh).toLocaleString()}
+            RM {original.toLocaleString()}
           </span>
         </div>
         <div>
           当前前台价格：<strong>{live.estimate}</strong>
         </div>
-        <div>库存：{product.stockQuantity ?? 1}</div>
+        <div>库存：{product.stockQuantity ?? 0}</div>
         <PricePreview productId={product.id} />
       </div>
 
@@ -85,20 +96,26 @@ export default async function AdminProductEditPage({
 
         <div className="grid sm:grid-cols-2 gap-4">
           <Field
-            label="原价 / 起始价 (RM)"
+            label="原价 (RM)"
             name="base_low"
             type="number"
-            defaultValue={String(product.basePriceLow || product.basePriceHigh || "")}
+            defaultValue={original ? String(original) : ""}
           />
           <Field
-            label="库存数量"
-            name="stock"
+            label="当前价格 / 最新价 (RM)"
+            name="current_price"
             type="number"
-            defaultValue={String(product.stockQuantity ?? 1)}
+            defaultValue={currentSeed ? String(currentSeed) : ""}
           />
         </div>
+        <Field
+          label="库存数量"
+          name="stock"
+          type="number"
+          defaultValue={String(product.stockQuantity ?? 0)}
+        />
         <p className="text-xs text-zinc-500 -mt-2">
-          填写原价后，前台会显示划线原价 + 按每日上浮规则计算的当前价格。库存会显示在藏品详情页。
+          原价显示为划线价；当前价格可手动填写，并作为上浮计算起点。未填写库存时前台显示 0。
         </p>
 
         <Field label="上浮起始日" name="uplift_start" type="date" defaultValue={product.upliftStartAt} />
@@ -142,9 +159,7 @@ export default async function AdminProductEditPage({
         </label>
 
         <div className="flex gap-3 pt-2">
-          <button type="submit" className="bg-zinc-900 text-white px-4 py-2 rounded-lg text-sm">
-            保存
-          </button>
+          <SaveButton />
         </div>
       </form>
 

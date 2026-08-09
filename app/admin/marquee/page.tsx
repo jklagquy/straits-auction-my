@@ -8,14 +8,23 @@ import {
   toggleMarqueeActiveAction,
 } from "../actions";
 
-export default async function AdminMarqueePage() {
+import SavedBanner from "@/components/admin/SavedBanner";
+import SaveButton from "@/components/admin/SaveButton";
+
+export default async function AdminMarqueePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ saved?: string }>;
+}) {
   await requireAdminPage();
+  const { saved } = await searchParams;
   const items = [...(await loadAdminStore()).marquee].sort(
     (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
   );
 
   return (
     <div className="space-y-6">
+      <SavedBanner saved={saved} />
       <div>
         <h1 className="text-2xl font-bold">滚动公告</h1>
         <p className="mt-1 text-sm text-zinc-500">
@@ -84,9 +93,9 @@ export default async function AdminMarqueePage() {
                   启用
                 </label>
                 <div className="flex gap-3">
-                  <button type="submit" className="rounded border px-3 py-1 text-sm hover:bg-zinc-50">
+                  <SaveButton className="rounded border px-3 py-1 text-sm hover:bg-zinc-50 disabled:opacity-60">
                     保存
-                  </button>
+                  </SaveButton>
                   <Link href={`/admin/marquee/${m.id}`} className="text-sm text-blue-700">
                     详情
                   </Link>

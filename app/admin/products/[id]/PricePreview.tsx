@@ -8,7 +8,11 @@ export default function PricePreview({ productId }: { productId: string }) {
 
   useEffect(() => {
     previewProductPriceAction(productId).then((r) => {
-      if (r) setText(`7日后约 RM ${Math.round(r.low).toLocaleString()} – ${Math.round(r.high).toLocaleString()}`);
+      if (r) {
+        setText(
+          `7 日后约 RM ${Math.round(r.in7 ?? r.low).toLocaleString()}`
+        );
+      }
     });
   }, [productId]);
 

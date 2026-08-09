@@ -85,6 +85,7 @@ export async function savePriceRulesAction(formData: FormData) {
   if (!isSupabaseConfigured()) saveAdminStore(store);
   await syncPriceRules(store.priceRules);
   revalidatePublic();
+  redirect("/admin/price-rules?saved=1");
 }
 
 export async function saveSiteSettingsAction(formData: FormData) {
@@ -123,6 +124,7 @@ export async function saveSiteSettingsAction(formData: FormData) {
   if (!isSupabaseConfigured()) saveAdminStore(store);
   await syncSiteSettings(store.siteSettings);
   revalidatePublic();
+  redirect("/admin/settings?saved=1");
 }
 
 export async function saveProductAction(formData: FormData) {
@@ -154,7 +156,8 @@ export async function saveProductAction(formData: FormData) {
       status: "preview",
       basePriceLow: 0,
       basePriceHigh: 0,
-      stockQuantity: 1,
+      stockQuantity: 0,
+      manualCurrentPrice: null,
       currency: "MYR",
       upliftEnabled: null,
       upliftMode: null,
@@ -191,15 +194,21 @@ export async function saveProductAction(formData: FormData) {
       .map((s) => s.trim())
       .filter(Boolean);
   }
-  // Single-price mode: 原价 = base_low; keep high in sync unless explicitly set higher for legacy
+  // 原价 = base_low; 当前价 seed = current_price (manual)
+  const { parseStockFormValue } = await import("@/lib/cms/stock");
   const base = Number(formData.get("base_low") || 0);
-  const highRaw = formData.get("base_high");
   p.basePriceLow = base;
-  p.basePriceHigh =
-    highRaw !== null && String(highRaw).trim() !== ""
-      ? Number(highRaw)
-      : base;
-  p.stockQuantity = Math.max(0, Math.floor(Number(formData.get("stock") || 1)));
+  const currentRaw = String(formData.get("current_price") ?? "").trim();
+  const currentPrice = currentRaw === "" ? NaN : Number(currentRaw);
+  if (Number.isFinite(currentPrice) && currentPrice > 0) {
+    p.manualCurrentPrice = currentPrice;
+    // Keep base_high in sync with current seed for legacy fields
+    p.basePriceHigh = currentPrice;
+  } else {
+    p.manualCurrentPrice = null;
+    p.basePriceHigh = base;
+  }
+  p.stockQuantity = parseStockFormValue(formData.get("stock"));
   p.upliftEnabled =
     formData.get("uplift_override") === "on"
       ? formData.get("uplift_enabled") === "on"
@@ -223,6 +232,7 @@ export async function saveProductAction(formData: FormData) {
   if (!isSupabaseConfigured()) saveAdminStore(store);
   await syncProduct(p);
   revalidatePublic();
+  redirect(`/admin/products/${p.id}?saved=1`);
 }
 
 export async function createProductAction() {
@@ -244,7 +254,8 @@ export async function createProductAction() {
     status: "preview" as const,
     basePriceLow: 0,
     basePriceHigh: 0,
-    stockQuantity: 1,
+    stockQuantity: 0,
+    manualCurrentPrice: null,
     currency: "MYR",
     upliftEnabled: null,
     upliftMode: null,
@@ -323,7 +334,7 @@ export async function saveArticleAction(formData: FormData) {
   if (!isSupabaseConfigured()) saveAdminStore(store);
   await syncArticle(article as ArticleRecord);
   revalidatePublic();
-  redirect("/admin/news");
+  redirect(`/admin/news/${article.id}?saved=1`);
 }
 
 export async function deleteArticleAction(formData: FormData) {
@@ -385,7 +396,7 @@ export async function savePostAction(formData: FormData) {
   if (!isSupabaseConfigured()) saveAdminStore(store);
   await syncPost(post as PostRecord);
   revalidatePublic();
-  redirect("/admin/posts");
+  redirect(`/admin/posts/${post.id}?saved=1`);
 }
 
 export async function moveProductSortAction(formData: FormData) {
@@ -436,7 +447,7 @@ export async function createMarqueeInlineAction(formData: FormData) {
   if (!isSupabaseConfigured()) saveAdminStore(store);
   await syncMarquee(msg);
   revalidatePublic();
-  redirect("/admin/marquee");
+  redirect("/admin/marquee?saved=1");
 }
 
 export async function toggleMarqueeActiveAction(formData: FormData) {
@@ -466,6 +477,7 @@ export async function saveMarqueeInlineAction(formData: FormData) {
   if (!isSupabaseConfigured()) saveAdminStore(store);
   await syncMarquee(msg);
   revalidatePublic();
+  redirect("/admin/marquee?saved=1");
 }
 
 export async function deletePostAction(formData: FormData) {
@@ -495,7 +507,7 @@ export async function savePostCommentAction(formData: FormData) {
     await syncPost(post as PostRecord);
   }
   revalidatePublic();
-  redirect(`/admin/posts/${postId}/comments`);
+  redirect(`/admin/posts/${postId}/comments?saved=1`);
 }
 
 export async function deletePostCommentAction(formData: FormData) {
@@ -537,7 +549,7 @@ export async function saveMarqueeAction(formData: FormData) {
   if (!isSupabaseConfigured()) saveAdminStore(store);
   await syncMarquee(msg as MarqueeRecord);
   revalidatePublic();
-  redirect("/admin/marquee");
+  redirect("/admin/marquee?saved=1");
 }
 
 export async function deleteMarqueeAction(formData: FormData) {
@@ -586,7 +598,7 @@ export async function saveBannerAction(formData: FormData) {
   if (!isSupabaseConfigured()) saveAdminStore(store);
   await syncBanner(banner as BannerRecord);
   revalidatePublic();
-  redirect("/admin/banners");
+  redirect(`/admin/banners/${banner.id}?saved=1`);
 }
 
 export async function deleteBannerAction(formData: FormData) {
@@ -638,10 +650,14 @@ export async function previewProductPriceAction(productId: string) {
   const p = store.products.find((x) => x.id === productId);
   if (!p) return null;
   const enriched = enrichProduct(p, store.priceRules);
+  const in7 = new Date();
+  in7.setDate(in7.getDate() + 7);
+  const future = enrichProduct(p, store.priceRules, in7);
   return {
     estimate: enriched.estimate,
     low: enriched.displayPriceLow,
     high: enriched.displayPriceHigh,
+    in7: future.displayPriceLow,
   };
 }
 

@@ -2,14 +2,22 @@ import { requireAdminPage } from "@/lib/admin-guard";
 import { saveSiteSettingsAction } from "../actions";
 import { loadAdminStore } from "@/lib/cms/repository";
 import MediaUploader from "@/components/admin/MediaUploader";
+import SaveButton from "@/components/admin/SaveButton";
+import SavedBanner from "@/components/admin/SavedBanner";
 import { isSupabaseConfigured } from "@/lib/cms/supabase";
 
-export default async function AdminSettingsPage() {
+export default async function AdminSettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ saved?: string }>;
+}) {
   await requireAdminPage();
+  const { saved } = await searchParams;
   const s = (await loadAdminStore()).siteSettings;
 
   return (
     <div className="max-w-2xl space-y-6">
+      <SavedBanner saved={saved} />
       <div>
         <h1 className="text-2xl font-bold">站点与客服设置</h1>
         <p className="text-sm text-zinc-500 mt-1">
@@ -95,9 +103,7 @@ export default async function AdminSettingsPage() {
         <textarea name="addr_zh" defaultValue={s.address.zh} rows={2} placeholder="地址（繁體）" className="w-full border rounded px-3 py-2 text-sm" />
         <textarea name="addr_en" defaultValue={s.address.en} rows={2} placeholder="Address (EN)" className="w-full border rounded px-3 py-2 text-sm" />
 
-        <button type="submit" className="bg-zinc-900 text-white px-4 py-2 rounded-lg text-sm">
-          保存
-        </button>
+        <SaveButton />
       </form>
     </div>
   );

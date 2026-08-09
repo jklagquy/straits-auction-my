@@ -58,9 +58,13 @@ export async function syncProduct(
   product: Omit<ProductRecord, "displayPriceLow" | "displayPriceHigh" | "estimate">
 ): Promise<void> {
   if (!isSupabaseConfigured()) return;
-  const { withStockInSpecs } = await import("./stock");
+  const { withProductMetaInSpecs } = await import("./stock");
   const sb = createServiceClient();
-  const stock = product.stockQuantity ?? 1;
+  const stock = product.stockQuantity ?? 0;
+  const manual =
+    product.manualCurrentPrice != null && product.manualCurrentPrice > 0
+      ? product.manualCurrentPrice
+      : null;
   const payload: Record<string, unknown> = {
     id: product.id,
     slug: product.slug,
@@ -79,8 +83,8 @@ export async function syncProduct(
     description_en: product.description.en,
     image: product.image,
     gallery: product.gallery,
-    // Persist stock in specs meta until/alongside stock_quantity column
-    specs: withStockInSpecs(product.specs || [], stock),
+    // Persist stock + manual current price in specs meta (works without DB migration)
+    specs: withProductMetaInSpecs(product.specs || [], stock, manual),
     featured: product.featured,
     status: product.status,
     base_price_low: product.basePriceLow,

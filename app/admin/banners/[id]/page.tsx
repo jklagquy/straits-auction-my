@@ -3,14 +3,19 @@ import { requireAdminPage } from "@/lib/admin-guard";
 import { loadAdminStore } from "@/lib/cms/repository";
 import { saveBannerAction } from "../../actions";
 import MediaUploader from "@/components/admin/MediaUploader";
+import SaveButton from "@/components/admin/SaveButton";
+import SavedBanner from "@/components/admin/SavedBanner";
 
 export default async function AdminBannerEditPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ saved?: string }>;
 }) {
   await requireAdminPage();
   const { id } = await params;
+  const { saved } = await searchParams;
   const store = await loadAdminStore();
   const isNew = id === "new";
   const banner = isNew
@@ -29,6 +34,7 @@ export default async function AdminBannerEditPage({
 
   return (
     <div className="max-w-3xl space-y-6">
+      <SavedBanner saved={saved} />
       <h1 className="text-2xl font-bold">{isNew ? "新建横幅" : "编辑横幅"}</h1>
       <form action={saveBannerAction} className="space-y-4 rounded-xl border bg-white p-6">
         <input type="hidden" name="id" value={banner.id} />
@@ -58,7 +64,7 @@ export default async function AdminBannerEditPage({
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" name="active" defaultChecked={banner.active} /> 启用
         </label>
-        <button type="submit" className="bg-zinc-900 text-white px-4 py-2 rounded-lg text-sm">保存</button>
+        <SaveButton />
       </form>
     </div>
   );

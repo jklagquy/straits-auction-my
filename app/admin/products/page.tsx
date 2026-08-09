@@ -74,7 +74,7 @@ export default async function AdminProductsPage() {
                     <div className="text-amber-800 font-medium">{e.estimate}</div>
                     <div className="text-xs text-zinc-400">
                       原价 RM {(p.basePriceLow || p.basePriceHigh).toLocaleString()}
-                      {" · "}库存 {p.stockQuantity ?? 1}
+                      {" · "}库存 {p.stockQuantity ?? 0}
                     </div>
                   </td>
                   <td className="p-3">

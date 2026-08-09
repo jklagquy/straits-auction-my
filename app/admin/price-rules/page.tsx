@@ -1,13 +1,21 @@
 import { requireAdminPage } from "@/lib/admin-guard";
 import { savePriceRulesAction } from "../actions";
 import { loadAdminStore } from "@/lib/cms/repository";
+import SaveButton from "@/components/admin/SaveButton";
+import SavedBanner from "@/components/admin/SavedBanner";
 
-export default async function PriceRulesPage() {
+export default async function PriceRulesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ saved?: string }>;
+}) {
   await requireAdminPage();
+  const { saved } = await searchParams;
   const rules = (await loadAdminStore()).priceRules;
 
   return (
     <div className="max-w-xl space-y-6">
+      <SavedBanner saved={saved} />
       <h1 className="text-2xl font-bold">{"\u6BCF\u65E5\u4EF7\u683C\u4E0A\u6D6E"}</h1>
       <p className="text-sm text-zinc-600">
         {
@@ -46,9 +54,7 @@ export default async function PriceRulesPage() {
           <input name="currency" defaultValue={rules.currency} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" />
         </div>
 
-        <button type="submit" className="bg-zinc-900 text-white px-4 py-2 rounded-lg text-sm">
-          {"\u4FDD\u5B58"}
-        </button>
+        <SaveButton>{`\u4FDD\u5B58`}</SaveButton>
       </form>
     </div>
   );

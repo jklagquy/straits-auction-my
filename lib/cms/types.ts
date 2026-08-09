@@ -52,8 +52,13 @@ export type ProductRecord = {
   status: LotStatus;
   basePriceLow: number;
   basePriceHigh: number;
-  /** Available units / limited-edition count */
+  /** Available units; 0 means unset / sold out display */
   stockQuantity: number;
+  /**
+   * Manual current-price seed at upliftStartAt.
+   * When null, uplift is computed from basePriceLow (原价).
+   */
+  manualCurrentPrice: number | null;
   currency: string;
   upliftEnabled: boolean | null;
   upliftMode: UpliftMode | null;

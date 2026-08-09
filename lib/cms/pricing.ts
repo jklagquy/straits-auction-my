@@ -20,7 +20,17 @@ export function resolveUplift(
   return { enabled, mode, value, startAt: product.upliftStartAt };
 }
 
-/** Single-price uplift from the original/base price (baseLow). */
+/** Price seed used for uplift: manual current price, else original (baseLow). */
+export function priceSeed(
+  product: Pick<ProductRecord, "basePriceLow" | "basePriceHigh" | "manualCurrentPrice">
+): number {
+  if (product.manualCurrentPrice != null && product.manualCurrentPrice > 0) {
+    return product.manualCurrentPrice;
+  }
+  return product.basePriceLow > 0 ? product.basePriceLow : product.basePriceHigh;
+}
+
+/** Single-price uplift from the seed price. */
 export function computeCurrentPrice(
   base: number,
   uplift: ReturnType<typeof resolveUplift>,
@@ -75,9 +85,9 @@ export function enrichProduct<T extends Omit<ProductRecord, "displayPriceLow" | 
   now = new Date()
 ): ProductRecord {
   const uplift = resolveUplift(product, rules);
-  const base = product.basePriceLow > 0 ? product.basePriceLow : product.basePriceHigh;
+  const seed = priceSeed(product);
   const current = computeCurrentPrice(
-    base,
+    seed,
     uplift,
     now,
     product.priceCapHigh
@@ -85,7 +95,11 @@ export function enrichProduct<T extends Omit<ProductRecord, "displayPriceLow" | 
   const currency = product.currency || rules.currency;
   return {
     ...product,
-    stockQuantity: Number(product.stockQuantity ?? 1),
+    stockQuantity: Number(product.stockQuantity ?? 0),
+    manualCurrentPrice:
+      product.manualCurrentPrice != null && product.manualCurrentPrice > 0
+        ? product.manualCurrentPrice
+        : null,
     displayPriceLow: current,
     displayPriceHigh: current,
     estimate: formatMoney(current, currency),
@@ -97,6 +111,7 @@ export function buildPriceHistory(
     ProductRecord,
     | "basePriceLow"
     | "basePriceHigh"
+    | "manualCurrentPrice"
     | "upliftEnabled"
     | "upliftMode"
     | "upliftValue"
@@ -107,13 +122,13 @@ export function buildPriceHistory(
   days = 30
 ): PriceSnapshot[] {
   const uplift = resolveUplift(product, rules);
-  const base = product.basePriceLow > 0 ? product.basePriceLow : product.basePriceHigh;
+  const seed = priceSeed(product);
   const out: PriceSnapshot[] = [];
   const today = new Date();
   for (let i = days - 1; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
-    const price = computeCurrentPrice(base, uplift, d, product.priceCapHigh);
+    const price = computeCurrentPrice(seed, uplift, d, product.priceCapHigh);
     out.push({
       date: d.toISOString().slice(0, 10),
       priceLow: price,

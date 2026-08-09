@@ -1,7 +1,7 @@
 import { enrichProduct } from "./pricing";
 import { readStore, writeStore } from "./file-store";
 import { buildDefaultStore } from "./seed";
-import { parseStockFromTitle, readStockFromRow } from "./stock";
+import { readProductMetaFromRow } from "./stock";
 import { createServiceClient, isSupabaseConfigured } from "./supabase";
 import type {
   Article,
@@ -72,7 +72,7 @@ function toProduct(p: ProductRecord): Product {
     estimate: p.estimate,
     originalPrice: original,
     currentPrice: p.displayPriceLow,
-    stockQuantity: p.stockQuantity ?? 1,
+    stockQuantity: p.stockQuantity ?? 0,
     currency: p.currency || "MYR",
     lotNo: p.lotNo,
     image: mediaUrl(p.image),
@@ -659,11 +659,10 @@ function mapPostRecord(row: Record<string, unknown>): PostRecord {
 /* ---------- row mappers ---------- */
 
 function mapProductRow(row: Record<string, unknown>): Omit<ProductRecord, "displayPriceLow" | "displayPriceHigh" | "estimate"> {
-  const { stockQuantity, specs } = readStockFromRow(
+  const { stockQuantity, manualCurrentPrice, specs } = readProductMetaFromRow(
     row.specs as ProductRecord["specs"],
     row.stock_quantity
   );
-  const fromTitle = parseStockFromTitle(String(row.title_cn || ""));
   return {
     id: String(row.id),
     slug: String(row.slug),
@@ -679,10 +678,8 @@ function mapProductRow(row: Record<string, unknown>): Omit<ProductRecord, "displ
     status: row.status as ProductRecord["status"],
     basePriceLow: Number(row.base_price_low),
     basePriceHigh: Number(row.base_price_high),
-    stockQuantity:
-      stockQuantity > 1 || row.stock_quantity != null
-        ? stockQuantity
-        : fromTitle ?? stockQuantity,
+    stockQuantity,
+    manualCurrentPrice,
     currency: String(row.currency || "MYR"),
     upliftEnabled: row.uplift_enabled as boolean | null,
     upliftMode: row.uplift_mode as ProductRecord["upliftMode"],

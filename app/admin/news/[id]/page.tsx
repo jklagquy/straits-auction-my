@@ -4,14 +4,19 @@ import { loadAdminStore } from "@/lib/cms/repository";
 import { saveArticleAction } from "../../actions";
 import MediaUploader from "@/components/admin/MediaUploader";
 import LanguageTabs from "@/components/admin/LanguageTabs";
+import SaveButton from "@/components/admin/SaveButton";
+import SavedBanner from "@/components/admin/SavedBanner";
 
 export default async function AdminNewsEditPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ saved?: string }>;
 }) {
   await requireAdminPage();
   const { id } = await params;
+  const { saved } = await searchParams;
   const store = await loadAdminStore();
   const isNew = id === "new";
   const article = isNew
@@ -32,6 +37,7 @@ export default async function AdminNewsEditPage({
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
+      <SavedBanner saved={saved} />
       <div>
         <h1 className="text-2xl font-bold">{isNew ? "新增资讯" : "编辑资讯"}</h1>
         <p className="mt-1 text-sm text-zinc-500">点击语言 Tab 分别编辑简体 / 繁体 / 英文版本</p>
@@ -108,9 +114,9 @@ export default async function AdminNewsEditPage({
           <a href="/admin/news" className="rounded-lg border px-4 py-2 text-sm hover:bg-zinc-50">
             取消
           </a>
-          <button type="submit" className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700">
+          <SaveButton className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-60">
             保存修改
-          </button>
+          </SaveButton>
         </div>
       </form>
     </div>

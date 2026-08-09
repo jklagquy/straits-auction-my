@@ -1,46 +1,118 @@
 import type { SpecRow } from "./types";
 
 const STOCK_MARKER = "__stock";
+const PRICE_MARKER = "__price";
 
-/** Embed stock into specs so it persists even before DB column migration. */
-export function withStockInSpecs(specs: SpecRow[], qty: number): SpecRow[] {
-  const cleaned = specs.filter((s) => s.label?.cn !== STOCK_MARKER);
-  const n = Math.max(0, Math.floor(Number(qty) || 0));
+function stripMarker(specs: SpecRow[], marker: string): SpecRow[] {
+  return (Array.isArray(specs) ? specs : []).filter(
+    (s) => s.label?.cn !== marker
+  );
+}
+
+export function stripProductMeta(specs: SpecRow[]): SpecRow[] {
+  return stripMarker(stripMarker(specs, STOCK_MARKER), PRICE_MARKER);
+}
+
+function upsertMeta(
+  specs: SpecRow[],
+  marker: string,
+  value: string
+): SpecRow[] {
   return [
-    ...cleaned,
+    ...stripMarker(specs, marker),
     {
-      label: { cn: STOCK_MARKER, zh: STOCK_MARKER, en: STOCK_MARKER },
-      value: { cn: String(n), zh: String(n), en: String(n) },
+      label: { cn: marker, zh: marker, en: marker },
+      value: { cn: value, zh: value, en: value },
     },
   ];
 }
 
-/** Read stock from column and/or specs meta; strip meta from public specs. */
+function readMeta(
+  specs: SpecRow[] | null | undefined,
+  marker: string
+): string | null {
+  const list = Array.isArray(specs) ? specs : [];
+  const meta = list.find((s) => s.label?.cn === marker);
+  if (!meta) return null;
+  const v = meta.value?.cn;
+  return v == null || v === "" ? null : String(v);
+}
+
+/** Embed stock + optional manual current price into specs for persistence. */
+export function withProductMetaInSpecs(
+  specs: SpecRow[],
+  stock: number,
+  manualCurrentPrice: number | null
+): SpecRow[] {
+  let next = upsertMeta(
+    Array.isArray(specs) ? specs : [],
+    STOCK_MARKER,
+    String(Math.max(0, Math.floor(Number(stock) || 0)))
+  );
+  if (manualCurrentPrice != null && manualCurrentPrice > 0) {
+    next = upsertMeta(next, PRICE_MARKER, String(manualCurrentPrice));
+  } else {
+    next = stripMarker(next, PRICE_MARKER);
+  }
+  return next;
+}
+
+/** @deprecated use withProductMetaInSpecs */
+export function withStockInSpecs(specs: SpecRow[], qty: number): SpecRow[] {
+  return withProductMetaInSpecs(specs, qty, null);
+}
+
+export function readProductMetaFromRow(
+  specs: SpecRow[] | null | undefined,
+  columnStock: unknown
+): {
+  stockQuantity: number;
+  manualCurrentPrice: number | null;
+  specs: SpecRow[];
+} {
+  const list = Array.isArray(specs) ? specs : [];
+  const stockMeta = readMeta(list, STOCK_MARKER);
+  const priceMeta = readMeta(list, PRICE_MARKER);
+
+  const fromCol =
+    columnStock != null && columnStock !== ""
+      ? Number(columnStock)
+      : NaN;
+  const fromMeta = stockMeta != null ? Number(stockMeta) : NaN;
+
+  // Explicit meta/column wins; otherwise default 0 (never invent stock from title)
+  let stockQuantity = 0;
+  if (Number.isFinite(fromCol)) {
+    stockQuantity = Math.max(0, Math.floor(fromCol));
+  } else if (stockMeta != null && Number.isFinite(fromMeta)) {
+    stockQuantity = Math.max(0, Math.floor(fromMeta));
+  }
+
+  const manualRaw = priceMeta != null ? Number(priceMeta) : NaN;
+  const manualCurrentPrice =
+    Number.isFinite(manualRaw) && manualRaw > 0 ? manualRaw : null;
+
+  return {
+    stockQuantity,
+    manualCurrentPrice,
+    specs: stripProductMeta(list),
+  };
+}
+
+/** @deprecated use readProductMetaFromRow */
 export function readStockFromRow(
   specs: SpecRow[] | null | undefined,
   columnValue: unknown
 ): { stockQuantity: number; specs: SpecRow[] } {
-  const list = Array.isArray(specs) ? specs : [];
-  const meta = list.find((s) => s.label?.cn === STOCK_MARKER);
-  const fromMeta = meta ? Number(meta.value?.cn) : NaN;
-  const fromCol =
-    columnValue != null && columnValue !== ""
-      ? Number(columnValue)
-      : NaN;
-  const stockQuantity = Number.isFinite(fromCol)
-    ? Math.max(0, Math.floor(fromCol))
-    : Number.isFinite(fromMeta)
-      ? Math.max(0, Math.floor(fromMeta))
-      : 1;
-  return {
-    stockQuantity,
-    specs: list.filter((s) => s.label?.cn !== STOCK_MARKER),
-  };
+  const r = readProductMetaFromRow(specs, columnValue);
+  return { stockQuantity: r.stockQuantity, specs: r.specs };
 }
 
-/** Parse limited-edition count from titles like "限量，3000个". */
-export function parseStockFromTitle(title: string): number | null {
-  const m = title.match(/限量[，,\s]*(\d+)\s*个?/);
-  if (!m) return null;
-  return Math.max(0, Math.floor(Number(m[1])));
+export function parseStockFormValue(raw: FormDataEntryValue | null): number {
+  if (raw == null) return 0;
+  const s = String(raw).trim();
+  if (s === "") return 0;
+  const n = Number(s);
+  if (!Number.isFinite(n)) return 0;
+  return Math.max(0, Math.floor(n));
 }

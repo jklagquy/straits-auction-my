@@ -7,14 +7,19 @@ import { savePostAction } from "../../actions";
 import MediaUploader from "@/components/admin/MediaUploader";
 import MultiImageUploader from "@/components/admin/MultiImageUploader";
 import LanguageTabs from "@/components/admin/LanguageTabs";
+import SaveButton from "@/components/admin/SaveButton";
+import SavedBanner from "@/components/admin/SavedBanner";
 
 export default async function AdminPostEditPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ saved?: string }>;
 }) {
   await requireAdminPage();
   const { id } = await params;
+  const { saved } = await searchParams;
   const store = await loadAdminStore();
   const isNew = id === "new";
   const post = isNew
@@ -40,6 +45,7 @@ export default async function AdminPostEditPage({
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
+      <SavedBanner saved={saved} />
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-bold">{isNew ? "新增藏家动态" : "编辑藏家动态"}</h1>
         <div className="flex gap-3">
@@ -107,12 +113,9 @@ export default async function AdminPostEditPage({
         </div>
 
         <div className="lg:col-span-2 flex justify-center">
-          <button
-            type="submit"
-            className="rounded-lg bg-blue-600 px-8 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
-          >
+          <SaveButton className="rounded-lg bg-blue-600 px-8 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60">
             {isNew ? "创建动态" : "保存修改"}
-          </button>
+          </SaveButton>
         </div>
       </form>
     </div>
