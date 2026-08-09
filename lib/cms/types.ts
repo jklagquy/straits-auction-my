@@ -52,6 +52,8 @@ export type ProductRecord = {
   status: LotStatus;
   basePriceLow: number;
   basePriceHigh: number;
+  /** Available units / limited-edition count */
+  stockQuantity: number;
   currency: string;
   upliftEnabled: boolean | null;
   upliftMode: UpliftMode | null;
@@ -61,9 +63,10 @@ export type ProductRecord = {
   saleSessionId: string | null;
   sortOrder: number;
   active: boolean;
-  /** Computed at read time */
+  /** Computed at read time — current (uplifted) price */
   displayPriceLow: number;
   displayPriceHigh: number;
+  /** Formatted current price, e.g. "RM 51,000" */
   estimate: string;
 };
 
@@ -175,6 +178,10 @@ export type Product = {
   excerpt: Localized;
   description: Localized;
   estimate: string;
+  originalPrice?: number;
+  currentPrice?: number;
+  stockQuantity?: number;
+  currency?: string;
   lotNo: string;
   image: string;
   gallery: string[];

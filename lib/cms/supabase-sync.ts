@@ -58,8 +58,10 @@ export async function syncProduct(
   product: Omit<ProductRecord, "displayPriceLow" | "displayPriceHigh" | "estimate">
 ): Promise<void> {
   if (!isSupabaseConfigured()) return;
+  const { withStockInSpecs } = await import("./stock");
   const sb = createServiceClient();
-  await sb.from("products").upsert({
+  const stock = product.stockQuantity ?? 1;
+  const payload: Record<string, unknown> = {
     id: product.id,
     slug: product.slug,
     lot_no: product.lotNo,
@@ -77,11 +79,13 @@ export async function syncProduct(
     description_en: product.description.en,
     image: product.image,
     gallery: product.gallery,
-    specs: product.specs,
+    // Persist stock in specs meta until/alongside stock_quantity column
+    specs: withStockInSpecs(product.specs || [], stock),
     featured: product.featured,
     status: product.status,
     base_price_low: product.basePriceLow,
     base_price_high: product.basePriceHigh,
+    stock_quantity: stock,
     currency: product.currency,
     uplift_enabled: product.upliftEnabled,
     uplift_mode: product.upliftMode,
@@ -92,7 +96,15 @@ export async function syncProduct(
     sort_order: product.sortOrder,
     active: product.active,
     updated_at: new Date().toISOString(),
-  });
+  };
+  const { error } = await sb.from("products").upsert(payload);
+  if (error && /stock_quantity/i.test(error.message)) {
+    delete payload.stock_quantity;
+    const retry = await sb.from("products").upsert(payload);
+    if (retry.error) throw new Error(retry.error.message);
+  } else if (error) {
+    throw new Error(error.message);
+  }
 }
 
 export async function deleteProductRemote(id: string): Promise<void> {

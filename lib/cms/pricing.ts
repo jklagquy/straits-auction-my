@@ -20,6 +20,24 @@ export function resolveUplift(
   return { enabled, mode, value, startAt: product.upliftStartAt };
 }
 
+/** Single-price uplift from the original/base price (baseLow). */
+export function computeCurrentPrice(
+  base: number,
+  uplift: ReturnType<typeof resolveUplift>,
+  now = new Date(),
+  capHigh: number | null = null
+): number {
+  if (!uplift.enabled || base <= 0) return roundMoney(base);
+  const days = daysSince(uplift.startAt, now);
+  let current =
+    uplift.mode === "percent_daily"
+      ? base * (1 + (uplift.value / 100) * days)
+      : base + uplift.value * days;
+  if (capHigh != null && capHigh > 0 && current > capHigh) current = capHigh;
+  return roundMoney(current);
+}
+
+/** @deprecated Prefer computeCurrentPrice — kept for callers still passing a range. */
 export function computeDisplayPrices(
   baseLow: number,
   baseHigh: number,
@@ -27,33 +45,19 @@ export function computeDisplayPrices(
   now = new Date(),
   capHigh: number | null = null
 ): { low: number; high: number } {
-  if (!uplift.enabled || baseLow <= 0) {
-    return { low: baseLow, high: baseHigh };
-  }
-  const days = daysSince(uplift.startAt, now);
-  let low = baseLow;
-  let high = baseHigh;
-
-  if (uplift.mode === "percent_daily") {
-    const factor = 1 + (uplift.value / 100) * days;
-    low = baseLow * factor;
-    high = baseHigh * factor;
-  } else {
-    low = baseLow + uplift.value * days;
-    high = baseHigh + uplift.value * days;
-  }
-
-  if (capHigh != null && capHigh > 0 && high > capHigh) {
-    const ratio = baseHigh > 0 ? capHigh / high : 1;
-    high = capHigh;
-    low = low * ratio;
-  }
-
-  return { low: roundMoney(low), high: roundMoney(high) };
+  const base = baseLow > 0 ? baseLow : baseHigh;
+  const current = computeCurrentPrice(base, uplift, now, capHigh);
+  return { low: current, high: current };
 }
 
 function roundMoney(n: number): number {
   return Math.round(n * 100) / 100;
+}
+
+export function formatMoney(amount: number, currency = "MYR"): string {
+  if (amount <= 0) return "Price on request";
+  const sym = currency === "MYR" ? "RM" : currency;
+  return `${sym} ${amount.toLocaleString("en-MY", { maximumFractionDigits: 0 })}`;
 }
 
 export function formatEstimate(
@@ -61,12 +65,8 @@ export function formatEstimate(
   high: number,
   currency = "MYR"
 ): string {
-  if (low <= 0 && high <= 0) return "Price on request";
-  const sym = currency === "MYR" ? "RM" : currency;
-  const fmt = (n: number) =>
-    n.toLocaleString("en-MY", { maximumFractionDigits: 0 });
-  if (low === high) return `${sym} ${fmt(low)}`;
-  return `${sym} ${fmt(low)} – ${fmt(high)}`;
+  const amount = low > 0 ? low : high;
+  return formatMoney(amount, currency);
 }
 
 export function enrichProduct<T extends Omit<ProductRecord, "displayPriceLow" | "displayPriceHigh" | "estimate">>(
@@ -75,18 +75,20 @@ export function enrichProduct<T extends Omit<ProductRecord, "displayPriceLow" | 
   now = new Date()
 ): ProductRecord {
   const uplift = resolveUplift(product, rules);
-  const { low, high } = computeDisplayPrices(
-    product.basePriceLow,
-    product.basePriceHigh,
+  const base = product.basePriceLow > 0 ? product.basePriceLow : product.basePriceHigh;
+  const current = computeCurrentPrice(
+    base,
     uplift,
     now,
     product.priceCapHigh
   );
+  const currency = product.currency || rules.currency;
   return {
     ...product,
-    displayPriceLow: low,
-    displayPriceHigh: high,
-    estimate: formatEstimate(low, high, product.currency || rules.currency),
+    stockQuantity: Number(product.stockQuantity ?? 1),
+    displayPriceLow: current,
+    displayPriceHigh: current,
+    estimate: formatMoney(current, currency),
   };
 }
 
@@ -105,22 +107,17 @@ export function buildPriceHistory(
   days = 30
 ): PriceSnapshot[] {
   const uplift = resolveUplift(product, rules);
-  const out: { date: string; priceLow: number; priceHigh: number }[] = [];
+  const base = product.basePriceLow > 0 ? product.basePriceLow : product.basePriceHigh;
+  const out: PriceSnapshot[] = [];
   const today = new Date();
   for (let i = days - 1; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
-    const { low, high } = computeDisplayPrices(
-      product.basePriceLow,
-      product.basePriceHigh,
-      uplift,
-      d,
-      product.priceCapHigh
-    );
+    const price = computeCurrentPrice(base, uplift, d, product.priceCapHigh);
     out.push({
       date: d.toISOString().slice(0, 10),
-      priceLow: low,
-      priceHigh: high,
+      priceLow: price,
+      priceHigh: price,
     });
   }
   return out;

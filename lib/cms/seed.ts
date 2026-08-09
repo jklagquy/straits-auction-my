@@ -13,6 +13,7 @@ import {
   products,
 } from "../data";
 import type { CmsStore, SpecRow } from "./types";
+import { parseStockFromTitle } from "./stock";
 import { virtualCommentCount } from "./virtual-comments";
 
 function L(cn: string, zh: string, en: string): Localized {
@@ -28,6 +29,11 @@ function parseRmEstimate(s: string): { low: number; high: number } {
 
 function mapProduct(p: Product, i: number) {
   const { low, high } = parseRmEstimate(p.estimate);
+  const parsed =
+    p.stockQuantity ??
+    parseStockFromTitle(p.title.cn) ??
+    parseStockFromTitle(p.title.zh) ??
+    1;
   return {
     id: p.id,
     slug: p.slug,
@@ -42,7 +48,8 @@ function mapProduct(p: Product, i: number) {
     featured: Boolean(p.featured),
     status: "preview" as const,
     basePriceLow: low,
-    basePriceHigh: high,
+    basePriceHigh: high > 0 ? high : low,
+    stockQuantity: parsed,
     currency: "MYR",
     upliftEnabled: null,
     upliftMode: null,

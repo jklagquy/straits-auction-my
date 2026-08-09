@@ -154,6 +154,7 @@ export async function saveProductAction(formData: FormData) {
       status: "preview",
       basePriceLow: 0,
       basePriceHigh: 0,
+      stockQuantity: 1,
       currency: "MYR",
       upliftEnabled: null,
       upliftMode: null,
@@ -190,8 +191,15 @@ export async function saveProductAction(formData: FormData) {
       .map((s) => s.trim())
       .filter(Boolean);
   }
-  p.basePriceLow = Number(formData.get("base_low") || 0);
-  p.basePriceHigh = Number(formData.get("base_high") || 0);
+  // Single-price mode: 原价 = base_low; keep high in sync unless explicitly set higher for legacy
+  const base = Number(formData.get("base_low") || 0);
+  const highRaw = formData.get("base_high");
+  p.basePriceLow = base;
+  p.basePriceHigh =
+    highRaw !== null && String(highRaw).trim() !== ""
+      ? Number(highRaw)
+      : base;
+  p.stockQuantity = Math.max(0, Math.floor(Number(formData.get("stock") || 1)));
   p.upliftEnabled =
     formData.get("uplift_override") === "on"
       ? formData.get("uplift_enabled") === "on"
@@ -236,6 +244,7 @@ export async function createProductAction() {
     status: "preview" as const,
     basePriceLow: 0,
     basePriceHigh: 0,
+    stockQuantity: 1,
     currency: "MYR",
     upliftEnabled: null,
     upliftMode: null,

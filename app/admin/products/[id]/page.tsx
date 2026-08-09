@@ -21,8 +21,17 @@ export default async function AdminProductEditPage({
   return (
     <div className="max-w-3xl space-y-6">
       <h1 className="text-2xl font-bold">编辑拍品 · {product.lotNo}</h1>
-      <div className="rounded-lg border bg-amber-50 p-4 text-sm">
-        当前前台估价：<strong>{live.estimate}</strong>
+      <div className="rounded-lg border bg-amber-50 p-4 text-sm space-y-1">
+        <div>
+          原价：
+          <span className="text-zinc-400 line-through ml-1">
+            RM {(product.basePriceLow || product.basePriceHigh).toLocaleString()}
+          </span>
+        </div>
+        <div>
+          当前前台价格：<strong>{live.estimate}</strong>
+        </div>
+        <div>库存：{product.stockQuantity ?? 1}</div>
         <PricePreview productId={product.id} />
       </div>
 
@@ -75,9 +84,22 @@ export default async function AdminProductEditPage({
         </div>
 
         <div className="grid sm:grid-cols-2 gap-4">
-          <Field label="基础价下限 (RM)" name="base_low" type="number" defaultValue={String(product.basePriceLow)} />
-          <Field label="基础价上限 (RM)" name="base_high" type="number" defaultValue={String(product.basePriceHigh)} />
+          <Field
+            label="原价 / 起始价 (RM)"
+            name="base_low"
+            type="number"
+            defaultValue={String(product.basePriceLow || product.basePriceHigh || "")}
+          />
+          <Field
+            label="库存数量"
+            name="stock"
+            type="number"
+            defaultValue={String(product.stockQuantity ?? 1)}
+          />
         </div>
+        <p className="text-xs text-zinc-500 -mt-2">
+          填写原价后，前台会显示划线原价 + 按每日上浮规则计算的当前价格。库存会显示在藏品详情页。
+        </p>
 
         <Field label="上浮起始日" name="uplift_start" type="date" defaultValue={product.upliftStartAt} />
         <Field label="封顶价 (可选)" name="price_cap" type="number" defaultValue={product.priceCapHigh ? String(product.priceCapHigh) : ""} />

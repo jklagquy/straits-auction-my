@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import PriceTrend from "@/components/PriceTrend";
 import ProductGallery from "@/components/ProductGallery";
+import { formatMoney } from "@/lib/cms/pricing";
 import {
   getPriceHistory,
   getProductBySlug,
@@ -89,13 +90,45 @@ export default async function ProductDetail({
             </div>
 
             <div className="mt-8 py-6 border-y border-white/10">
+              {(product.originalPrice ?? 0) > 0 && (
+                <div className="mb-3">
+                  <div className="text-[11px] tracking-wide-2 text-ivory/40 uppercase">
+                    {t.common.originalPrice}
+                  </div>
+                  <div className="mt-1 text-lg text-ivory/35 line-through decoration-ivory/40">
+                    {formatMoney(
+                      product.originalPrice!,
+                      product.currency || "MYR"
+                    )}
+                  </div>
+                </div>
+              )}
               <div className="text-[11px] tracking-wide-2 text-ivory/50 uppercase">
-                {t.common.estimate}
+                {t.common.currentPrice}
               </div>
               <div className="font-display text-2xl text-gold-soft mt-1">
                 {product.estimate}
               </div>
-              <PriceTrend history={history} />
+              {typeof product.stockQuantity === "number" && (
+                <div className="mt-4 text-sm text-ivory/70">
+                  <span className="text-ivory/45 tracking-wide-2 mr-2">
+                    {t.common.stock}
+                  </span>
+                  <span className="text-gold-soft">
+                    {product.stockQuantity}
+                  </span>
+                </div>
+              )}
+              <PriceTrend
+                history={history}
+                currency={product.currency || "MYR"}
+                labels={{
+                  title: t.common.priceHistory,
+                  date: t.common.date,
+                  price: t.common.currentPrice,
+                  change: t.common.change,
+                }}
+              />
             </div>
 
             <p className="mt-8 text-ivory/75 leading-[1.9]">

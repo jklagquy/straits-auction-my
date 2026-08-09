@@ -41,6 +41,12 @@ type Dict = {
     published: string;
     category: string;
     estimate: string;
+    originalPrice: string;
+    currentPrice: string;
+    stock: string;
+    priceHistory: string;
+    date: string;
+    change: string;
     lotNo: string;
     contactUs: string;
     inquire: string;
@@ -124,7 +130,13 @@ export const dict: Record<Locale, Dict> = {
       back: "返回",
       published: "发布于",
       category: "类别",
-      estimate: "参考价",
+      estimate: "当前价格",
+      originalPrice: "原价",
+      currentPrice: "当前价格",
+      stock: "库存",
+      priceHistory: "价格走势",
+      date: "日期",
+      change: "涨幅",
       lotNo: "藏品编号",
       contactUs: "联络协会",
       inquire: "咨询此藏品",
@@ -208,7 +220,13 @@ export const dict: Record<Locale, Dict> = {
       back: "返回",
       published: "發佈於",
       category: "類別",
-      estimate: "參考價",
+      estimate: "當前價格",
+      originalPrice: "原價",
+      currentPrice: "當前價格",
+      stock: "庫存",
+      priceHistory: "價格走勢",
+      date: "日期",
+      change: "漲幅",
       lotNo: "藏品編號",
       contactUs: "聯絡協會",
       inquire: "諮詢此藏品",
@@ -292,7 +310,13 @@ export const dict: Record<Locale, Dict> = {
       back: "Back",
       published: "Published",
       category: "Category",
-      estimate: "Reference",
+      estimate: "Current Price",
+      originalPrice: "Original",
+      currentPrice: "Current Price",
+      stock: "Stock",
+      priceHistory: "Price History",
+      date: "Date",
+      change: "Change",
       lotNo: "Ref. No.",
       contactUs: "Contact the Association",
       inquire: "Enquire About This Piece",

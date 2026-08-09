@@ -11,12 +11,22 @@ export type Product = {
   title: Localized;
   excerpt: Localized;
   description: Localized;
+  /** Formatted current (uplifted) price */
   estimate: string;
+  /** Original / starting price before daily uplift */
+  originalPrice?: number;
+  /** Current uplifted price (numeric) */
+  currentPrice?: number;
+  stockQuantity?: number;
+  currency?: string;
   lotNo: string;
   image: string;
   gallery: string[];
   specs: Spec[];
   featured?: boolean;
+  status?: string;
+  displayPriceLow?: number;
+  displayPriceHigh?: number;
 };
 
 export type Article = {

@@ -74,16 +74,25 @@ export function ProductCard({
         <p className="mt-3 text-sm text-ink-soft/70 line-clamp-2">
           {tr(product.excerpt, lang)}
         </p>
-        <div className="mt-5 pt-4 border-t border-line flex items-center justify-between">
+        <div className="mt-5 pt-4 border-t border-line flex items-center justify-between gap-3">
           <div>
+            {(product.originalPrice ?? 0) > 0 &&
+              product.originalPrice !== product.currentPrice && (
+                <div className="text-xs text-muted line-through decoration-muted/70">
+                  {product.currency === "MYR" || !product.currency ? "RM" : product.currency}{" "}
+                  {product.originalPrice!.toLocaleString("en-MY", {
+                    maximumFractionDigits: 0,
+                  })}
+                </div>
+              )}
             <div className="text-[10px] tracking-wide-2 text-muted uppercase">
-              {t.common.estimate}
+              {t.common.currentPrice}
             </div>
             <div className="text-sm text-bordeaux font-medium mt-0.5">
               {product.estimate}
             </div>
           </div>
-          <span className="text-[11px] tracking-wide-2 text-gold-deep">
+          <span className="text-[11px] tracking-wide-2 text-gold-deep shrink-0">
             {t.common.viewDetail} →
           </span>
         </div>
