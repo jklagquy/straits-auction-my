@@ -78,10 +78,11 @@ export default function MultiImageUploader({
       </div>
       <div className="flex flex-wrap gap-2">
         <input
-          type="url"
+          type="text"
+          inputMode="url"
           value={paste}
           onChange={(e) => setPaste(e.target.value)}
-          placeholder="或粘贴图片 URL 后点添加"
+          placeholder="或粘贴图片 URL / 相对路径后点添加"
           className="min-w-[220px] flex-1 rounded border px-3 py-2 text-sm"
         />
         <button

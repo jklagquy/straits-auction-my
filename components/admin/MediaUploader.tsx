@@ -49,10 +49,11 @@ export default function MediaUploader({
           className="text-sm"
         />
         <input
-          type="url"
+          type="text"
+          inputMode="url"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          placeholder="或粘贴图片 URL"
+          placeholder="或粘贴图片 URL / 相对路径"
           className="flex-1 min-w-[220px] border rounded px-3 py-2 text-sm"
         />
       </div>

@@ -89,7 +89,8 @@ export async function syncProduct(
     status: product.status,
     base_price_low: product.basePriceLow,
     base_price_high: product.basePriceHigh,
-    stock_quantity: stock,
+    // Stock + manual current price live in specs meta (__stock / __price).
+    // Do not write stock_quantity until that column is confirmed on all envs.
     currency: product.currency,
     uplift_enabled: product.upliftEnabled,
     uplift_mode: product.upliftMode,
@@ -102,13 +103,7 @@ export async function syncProduct(
     updated_at: new Date().toISOString(),
   };
   const { error } = await sb.from("products").upsert(payload);
-  if (error && /stock_quantity/i.test(error.message)) {
-    delete payload.stock_quantity;
-    const retry = await sb.from("products").upsert(payload);
-    if (retry.error) throw new Error(retry.error.message);
-  } else if (error) {
-    throw new Error(error.message);
-  }
+  if (error) throw new Error(error.message);
 }
 
 export async function deleteProductRemote(id: string): Promise<void> {

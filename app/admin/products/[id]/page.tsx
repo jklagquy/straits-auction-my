@@ -46,7 +46,11 @@ export default async function AdminProductEditPage({
         <PricePreview productId={product.id} />
       </div>
 
-      <form action={saveProductAction} className="space-y-4 rounded-xl border bg-white p-6">
+      <form
+        action={saveProductAction}
+        noValidate
+        className="space-y-4 rounded-xl border bg-white p-6"
+      >
         <input type="hidden" name="id" value={product.id} />
 
         <MediaUploader name="image" defaultValue={product.image} folder="products" label="主图" />

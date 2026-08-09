@@ -80,12 +80,12 @@ export function readProductMetaFromRow(
       : NaN;
   const fromMeta = stockMeta != null ? Number(stockMeta) : NaN;
 
-  // Explicit meta/column wins; otherwise default 0 (never invent stock from title)
+  // Prefer specs meta (admin writes here) over DB column — column may be stuck at default 1
   let stockQuantity = 0;
-  if (Number.isFinite(fromCol)) {
-    stockQuantity = Math.max(0, Math.floor(fromCol));
-  } else if (stockMeta != null && Number.isFinite(fromMeta)) {
+  if (stockMeta != null && Number.isFinite(fromMeta)) {
     stockQuantity = Math.max(0, Math.floor(fromMeta));
+  } else if (Number.isFinite(fromCol)) {
+    stockQuantity = Math.max(0, Math.floor(fromCol));
   }
 
   const manualRaw = priceMeta != null ? Number(priceMeta) : NaN;
