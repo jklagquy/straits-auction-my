@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireAdminPage } from "@/lib/admin-guard";
 import { loadAdminStore } from "@/lib/cms/repository";
-import { enrichProduct } from "@/lib/cms/pricing";
+import { enrichProduct, formatMoney } from "@/lib/cms/pricing";
 import type { LotStatus } from "@/lib/cms/types";
 import { createProductAction, deleteProductAction, moveProductSortAction } from "../actions";
 
@@ -71,7 +71,9 @@ export default async function AdminProductsPage() {
                     <div className="mt-0.5 font-mono text-xs text-zinc-400">{p.lotNo}</div>
                   </td>
                   <td className="p-3 whitespace-nowrap">
-                    <div className="text-amber-800 font-medium">{e.estimate}</div>
+                    <div className="text-amber-800 font-medium">
+                      {formatMoney(e.displayPriceLow, e.currency || "MYR", "cn")}
+                    </div>
                     <div className="text-xs text-zinc-400">
                       原价 RM {(p.basePriceLow || p.basePriceHigh).toLocaleString()}
                       {" · "}库存 {p.stockQuantity ?? 0}

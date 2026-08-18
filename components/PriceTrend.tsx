@@ -1,5 +1,6 @@
 import type { PriceSnapshot } from "@/lib/cms/types";
 import { formatMoney } from "@/lib/cms/pricing";
+import type { Locale } from "@/lib/i18n";
 
 /** Build a smooth cubic path through points (Catmull-Rom → Bezier). */
 function smoothPath(
@@ -33,12 +34,14 @@ function shortDate(iso: string): string {
 export default function PriceTrend({
   history,
   currency = "MYR",
+  lang = "cn",
   labels,
   originalPrice,
   currentPrice,
 }: {
   history: PriceSnapshot[];
   currency?: string;
+  lang?: Locale;
   labels: {
     title: string;
     date?: string;
@@ -109,16 +112,18 @@ export default function PriceTrend({
             {labels.title}
           </div>
           <div className="mt-1 font-display text-lg text-gold-soft tabular-nums">
-            {formatMoney(current, currency)}
+            {formatMoney(current, currency, lang)}
           </div>
-          <div className="mt-0.5 text-[11px] text-ivory/40">
-            {gain >= 0 ? "+" : ""}
-            {formatMoney(Math.abs(gain), currency)}
-            <span className="text-ivory/30">
-              {" "}
-              / {labels.original || labels.price || "—"}
-            </span>
-          </div>
+          {current > 0 && origin > 0 ? (
+            <div className="mt-0.5 text-[11px] text-ivory/40">
+              {gain >= 0 ? "+" : ""}
+              {formatMoney(Math.abs(gain), currency, lang)}
+              <span className="text-ivory/30">
+                {" "}
+                / {labels.original || labels.price || "—"}
+              </span>
+            </div>
+          ) : null}
         </div>
         <div
           className={`shrink-0 rounded-sm border px-2.5 py-1 text-[12px] font-medium tabular-nums ${

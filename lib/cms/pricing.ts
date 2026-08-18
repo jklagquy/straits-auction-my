@@ -1,5 +1,17 @@
 import type { PriceRules, PriceSnapshot, ProductRecord, UpliftMode } from "./types";
 import type { PriceTrailPoint } from "./stock";
+import type { Locale } from "@/lib/i18n";
+
+/** Shown when price is 0 / empty (not “询价”). */
+export const COMING_SOON: Record<Locale, string> = {
+  cn: "即将推出",
+  zh: "即將推出",
+  en: "Coming soon",
+};
+
+export function comingSoonLabel(lang: Locale = "cn"): string {
+  return COMING_SOON[lang] || COMING_SOON.cn;
+}
 
 export function daysSince(startIso: string, now = new Date()): number {
   const start = new Date(startIso.slice(0, 10) + "T00:00:00");
@@ -71,8 +83,12 @@ function roundMoney(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
-export function formatMoney(amount: number, currency = "MYR"): string {
-  if (amount <= 0) return "Price on request";
+export function formatMoney(
+  amount: number,
+  currency = "MYR",
+  lang: Locale = "cn"
+): string {
+  if (!Number.isFinite(amount) || amount <= 0) return comingSoonLabel(lang);
   const sym = currency === "MYR" ? "RM" : currency;
   return `${sym} ${amount.toLocaleString("en-MY", { maximumFractionDigits: 0 })}`;
 }
@@ -80,10 +96,11 @@ export function formatMoney(amount: number, currency = "MYR"): string {
 export function formatEstimate(
   low: number,
   high: number,
-  currency = "MYR"
+  currency = "MYR",
+  lang: Locale = "cn"
 ): string {
   const amount = low > 0 ? low : high;
-  return formatMoney(amount, currency);
+  return formatMoney(amount, currency, lang);
 }
 
 export function enrichProduct<T extends Omit<ProductRecord, "displayPriceLow" | "displayPriceHigh" | "estimate">>(
@@ -110,7 +127,7 @@ export function enrichProduct<T extends Omit<ProductRecord, "displayPriceLow" | 
     priceTrail: Array.isArray(product.priceTrail) ? product.priceTrail : [],
     displayPriceLow: current,
     displayPriceHigh: current,
-    estimate: formatMoney(current, currency),
+    estimate: formatMoney(current, currency, "cn"),
   };
 }
 

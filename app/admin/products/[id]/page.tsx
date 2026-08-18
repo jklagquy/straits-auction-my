@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { requireAdminPage } from "@/lib/admin-guard";
 import { deleteProductAction, saveProductAction } from "../../actions";
 import { loadAdminStore } from "@/lib/cms/repository";
-import { enrichProduct } from "@/lib/cms/pricing";
+import { enrichProduct, formatMoney } from "@/lib/cms/pricing";
 import PricePreview from "./PricePreview";
 import MediaUploader from "@/components/admin/MediaUploader";
 import SavedBanner from "@/components/admin/SavedBanner";
@@ -40,7 +40,10 @@ export default async function AdminProductEditPage({
           </span>
         </div>
         <div>
-          当前前台价格：<strong>{live.estimate}</strong>
+          当前前台价格：
+          <strong>
+            {formatMoney(live.displayPriceLow, product.currency || "MYR", "cn")}
+          </strong>
         </div>
         <div>库存：{product.stockQuantity ?? 0}</div>
         <PricePreview productId={product.id} />

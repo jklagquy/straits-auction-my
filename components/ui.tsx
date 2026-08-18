@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Product, Article } from "@/lib/cms/types";
 import { dict, tr, type Locale } from "@/lib/i18n";
+import { formatMoney } from "@/lib/cms/pricing";
 
 export function SectionHeader({
   kicker,
@@ -89,7 +90,11 @@ export function ProductCard({
               {t.common.currentPrice}
             </div>
             <div className="text-sm text-bordeaux font-medium mt-0.5">
-              {product.estimate}
+              {formatMoney(
+                product.currentPrice ?? product.displayPriceLow ?? 0,
+                product.currency || "MYR",
+                lang
+              )}
             </div>
           </div>
           <span className="text-[11px] tracking-wide-2 text-gold-deep shrink-0">

@@ -98,7 +98,8 @@ export default async function ProductDetail({
                   <div className="mt-1 text-lg text-ivory/35 line-through decoration-ivory/40">
                     {formatMoney(
                       product.originalPrice!,
-                      product.currency || "MYR"
+                      product.currency || "MYR",
+                      lang
                     )}
                   </div>
                 </div>
@@ -107,7 +108,11 @@ export default async function ProductDetail({
                 {t.common.currentPrice}
               </div>
               <div className="font-display text-2xl text-gold-soft mt-1">
-                {product.estimate}
+                {formatMoney(
+                  product.currentPrice ?? product.displayPriceLow ?? 0,
+                  product.currency || "MYR",
+                  lang
+                )}
               </div>
               {typeof product.stockQuantity === "number" && (
                 <div className="mt-4 text-sm text-ivory/70">
@@ -122,6 +127,7 @@ export default async function ProductDetail({
               <PriceTrend
                 history={history}
                 currency={product.currency || "MYR"}
+                lang={lang}
                 originalPrice={product.originalPrice}
                 currentPrice={product.currentPrice ?? product.displayPriceLow}
                 labels={{

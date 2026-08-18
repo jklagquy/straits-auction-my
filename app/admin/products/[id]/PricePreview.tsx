@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { previewProductPriceAction } from "../../actions";
+import { formatMoney } from "@/lib/cms/pricing";
 
 export default function PricePreview({ productId }: { productId: string }) {
   const [text, setText] = useState<string>("");
@@ -9,9 +10,8 @@ export default function PricePreview({ productId }: { productId: string }) {
   useEffect(() => {
     previewProductPriceAction(productId).then((r) => {
       if (r) {
-        setText(
-          `7 日后约 RM ${Math.round(r.in7 ?? r.low).toLocaleString()}`
-        );
+        const n = Number(r.in7 ?? r.low) || 0;
+        setText(`7 日后约 ${formatMoney(n, "MYR", "cn")}`);
       }
     });
   }, [productId]);

@@ -49,3 +49,4 @@ tmp-*.html
 tmp-*.json
 
 .vercel
+.env*.local

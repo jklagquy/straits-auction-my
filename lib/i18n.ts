@@ -44,6 +44,7 @@ type Dict = {
     originalPrice: string;
     currentPrice: string;
     stock: string;
+    comingSoon: string;
     priceHistory: string;
     date: string;
     change: string;
@@ -134,6 +135,7 @@ export const dict: Record<Locale, Dict> = {
       originalPrice: "原价",
       currentPrice: "当前价格",
       stock: "库存",
+      comingSoon: "即将推出",
       priceHistory: "价格走势",
       date: "日期",
       change: "涨幅",
@@ -224,6 +226,7 @@ export const dict: Record<Locale, Dict> = {
       originalPrice: "原價",
       currentPrice: "當前價格",
       stock: "庫存",
+      comingSoon: "即將推出",
       priceHistory: "價格走勢",
       date: "日期",
       change: "漲幅",
@@ -314,6 +317,7 @@ export const dict: Record<Locale, Dict> = {
       originalPrice: "Original",
       currentPrice: "Current Price",
       stock: "Stock",
+      comingSoon: "Coming soon",
       priceHistory: "Price History",
       date: "Date",
       change: "Change",
