@@ -52,6 +52,7 @@ export default async function ProductDetail({
     reserved: { cn: "已预留", zh: "已預留", en: "Reserved" },
     sold: { cn: "已成交", zh: "已成交", en: "Sold" },
   };
+  const badge = product.status ? tr(statusLabel[product.status], lang) : null;
   const currentAmount =
     product.currentPrice ?? product.displayPriceLow ?? 0;
   const showPriceTrend = currentAmount > 0 && history.length >= 2;
