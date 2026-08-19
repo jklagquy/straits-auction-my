@@ -52,7 +52,9 @@ export default async function ProductDetail({
     reserved: { cn: "已预留", zh: "已預留", en: "Reserved" },
     sold: { cn: "已成交", zh: "已成交", en: "Sold" },
   };
-  const badge = product.status ? tr(statusLabel[product.status], lang) : null;
+  const currentAmount =
+    product.currentPrice ?? product.displayPriceLow ?? 0;
+  const showPriceTrend = currentAmount > 0 && history.length >= 2;
 
   return (
     <>
@@ -109,7 +111,7 @@ export default async function ProductDetail({
               </div>
               <div className="font-display text-2xl text-gold-soft mt-1">
                 {formatMoney(
-                  product.currentPrice ?? product.displayPriceLow ?? 0,
+                  currentAmount,
                   product.currency || "MYR",
                   lang
                 )}
@@ -124,6 +126,7 @@ export default async function ProductDetail({
                   </span>
                 </div>
               )}
+              {showPriceTrend ? (
               <PriceTrend
                 history={history}
                 currency={product.currency || "MYR"}
@@ -138,6 +141,7 @@ export default async function ProductDetail({
                   original: t.common.originalPrice,
                 }}
               />
+              ) : null}
             </div>
 
             <p className="mt-8 text-ivory/75 leading-[1.9]">

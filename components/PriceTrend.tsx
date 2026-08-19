@@ -54,6 +54,10 @@ export default function PriceTrend({
 }) {
   if (history.length < 2) return null;
 
+  const currentCheck = currentPrice ?? history[history.length - 1]?.priceLow ?? 0;
+  // Coming soon (price 0 / empty): hide historical price nodes
+  if (!(currentCheck > 0)) return null;
+
   const prices = history.map((h) => h.priceLow);
   const min = Math.min(...prices);
   const max = Math.max(...prices);

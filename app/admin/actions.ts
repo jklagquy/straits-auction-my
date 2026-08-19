@@ -214,6 +214,8 @@ export async function saveProductAction(formData: FormData) {
   } else {
     p.manualCurrentPrice = null;
     p.basePriceHigh = base;
+    // Coming soon / cleared price — clear trail so chart won't show old climbs
+    p.priceTrail = [];
   }
   p.stockQuantity = parseStockFormValue(formData.get("stock"));
   p.upliftEnabled =

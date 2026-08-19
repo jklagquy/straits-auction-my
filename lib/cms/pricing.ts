@@ -169,6 +169,10 @@ export function buildPriceHistory(
     today,
     product.priceCapHigh
   );
+  // No public chart while price is coming soon (0 / empty)
+  if (!(current > 0)) {
+    return [];
+  }
   const startKey = (uplift.startAt || todayKey).slice(0, 10);
 
   // Waypoints: original at start → admin trail → live current today
