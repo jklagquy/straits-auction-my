@@ -28,6 +28,8 @@ export type SiteSettings = {
   commentsEnabled: boolean;
   /** When false, main-site like clicks show member-only prompt */
   likesEnabled: boolean;
+  /** When false, visitors see a blank 404 — no products, brand, or contact data */
+  sitePublicEnabled: boolean;
 };
 
 export type PostComment = {

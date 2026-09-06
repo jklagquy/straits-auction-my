@@ -28,7 +28,7 @@ export async function syncPriceRules(rules: PriceRules): Promise<void> {
 export async function syncSiteSettings(settings: SiteSettings): Promise<void> {
   if (!isSupabaseConfigured()) return;
   const sb = createServiceClient();
-  await sb.from("site_settings").upsert({
+  const payload: Record<string, unknown> = {
     id: 1,
     brand_cn: settings.brand.cn,
     brand_zh: settings.brand.zh,
@@ -50,8 +50,14 @@ export async function syncSiteSettings(settings: SiteSettings): Promise<void> {
     address_en: settings.address.en,
     comments_enabled: settings.commentsEnabled,
     likes_enabled: settings.likesEnabled,
+    site_public_enabled: settings.sitePublicEnabled !== false,
     updated_at: new Date().toISOString(),
-  });
+  };
+  const { error } = await sb.from("site_settings").upsert(payload);
+  if (error && /site_public_enabled/.test(error.message)) {
+    delete payload.site_public_enabled;
+    await sb.from("site_settings").upsert(payload);
+  }
 }
 
 export async function syncProduct(

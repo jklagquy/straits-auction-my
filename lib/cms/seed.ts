@@ -127,6 +127,7 @@ export function buildDefaultStore(): CmsStore {
       ),
       commentsEnabled: true,
       likesEnabled: true,
+      sitePublicEnabled: true,
     },
     saleSessions: [
       {

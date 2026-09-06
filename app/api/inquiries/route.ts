@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { createInquiry } from "@/lib/cms/repository";
+import { isPublicSiteEnabled } from "@/lib/site-gate";
 
 export async function POST(req: Request) {
+  if (!(await isPublicSiteEnabled())) {
+    return NextResponse.json({}, { status: 404 });
+  }
   try {
     const body = await req.json();
     if (!body.name || !body.email || !body.message) {

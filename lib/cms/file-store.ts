@@ -28,6 +28,7 @@ function normalizeStore(raw: CmsStore): CmsStore {
   }
   if (s.commentsEnabled == null) s.commentsEnabled = true;
   if (s.likesEnabled == null) s.likesEnabled = true;
+  if (s.sitePublicEnabled == null) s.sitePublicEnabled = true;
   raw.siteSettings = s;
   for (const p of raw.posts || []) {
     if (p.commentCount == null) {

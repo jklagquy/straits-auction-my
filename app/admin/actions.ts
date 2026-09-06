@@ -120,6 +120,7 @@ export async function saveSiteSettingsAction(formData: FormData) {
     },
     commentsEnabled: formData.get("comments_enabled") === "on",
     likesEnabled: formData.get("likes_enabled") === "on",
+    sitePublicEnabled: formData.get("site_public_enabled") === "on",
   };
   if (!isSupabaseConfigured()) saveAdminStore(store);
   await syncSiteSettings(store.siteSettings);
@@ -683,5 +684,6 @@ export async function getDashboardStatsAction() {
     inquiriesNew: inquiries.filter((i) => i.status === "new").length,
     uplift: store.priceRules.defaultUpliftValue,
     backend: isSupabaseConfigured() ? "supabase" : "local-file",
+    sitePublicEnabled: store.siteSettings.sitePublicEnabled !== false,
   };
 }

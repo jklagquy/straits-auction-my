@@ -142,6 +142,8 @@ function mapSiteSettingsRow(data: Record<string, unknown>): SiteSettings {
     commentsEnabled:
       data.comments_enabled == null ? true : Boolean(data.comments_enabled),
     likesEnabled: data.likes_enabled == null ? true : Boolean(data.likes_enabled),
+    sitePublicEnabled:
+      data.site_public_enabled == null ? true : Boolean(data.site_public_enabled),
   };
 }
 

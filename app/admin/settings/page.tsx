@@ -29,7 +29,32 @@ export default async function AdminSettingsPage({
       </div>
 
       <form action={saveSiteSettingsAction} className="space-y-4 rounded-xl border bg-white p-6">
-        <h2 className="font-semibold">互动权限</h2>
+        <h2 className="font-semibold">主站前台</h2>
+        <p className="text-xs text-zinc-500 -mt-2">
+          关闭后域名不会注销，后台仍可登录；访客打开本站任何前台页面都看不到藏品、资讯、联系方式等数据。
+          用于阶段切换时提前关掉本域名，避免客户搜到两个网站。
+        </p>
+        {s.sitePublicEnabled === false && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            当前状态：主站前台已关闭。访客打开本域名将看到空白页。
+          </div>
+        )}
+        <label className="flex items-center justify-between gap-4 rounded-lg border px-4 py-3 text-sm">
+          <span>
+            <span className="font-medium">主站前台开放</span>
+            <span className="block text-xs text-zinc-500 mt-0.5">
+              勾选=客户能看到完整网站；取消勾选=前台空白，后台不受影响
+            </span>
+          </span>
+          <input
+            type="checkbox"
+            name="site_public_enabled"
+            defaultChecked={s.sitePublicEnabled !== false}
+            className="h-5 w-5"
+          />
+        </label>
+
+        <h2 className="font-semibold pt-4">互动权限</h2>
         <p className="text-xs text-zinc-500 -mt-2">
           关闭后，主站点击「评论」或「点赞」会弹出「会员操作」提示（随前台语言切换）。
         </p>

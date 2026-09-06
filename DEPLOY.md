@@ -7,6 +7,7 @@
    - `supabase/migrations/001_auction_cms.sql`
    - `supabase/migrations/002_logo_storage.sql`
    - `supabase/migrations/003_comments_engagement.sql`（评论表 + 评论/点赞权限开关）
+   - 后续按文件名继续执行至 `008_site_public_enabled.sql`（主站前台开关）
 3. 本地填好 `.env.local` 后执行：
    ```bash
    npm run supabase:setup
@@ -50,7 +51,8 @@ ADMIN_SECRET=（随机长字符串）
 ## 4. 上线后
 
 1. 打开 `/admin/login` → 站点设置：上传 Logo、填公司信息 / WhatsApp
-2. 站点设置里的「评论权限 / 点赞权限」：关闭后，主站点击会弹出「会员操作」（随 cn/zh/en 切换）
-3. 藏家动态 → 编辑 →「管理评论」可分页增删改评论
-4. 拍品 / 新闻 / 动态 / 横幅：在后台上传真实内容
-5. 前台 `/{cn|zh|en}` 验证品牌与联系方式已生效
+2. 站点设置里的「主站前台开放」：取消勾选后，访客打开本域名看不到任何前台内容；后台 `/admin` 仍可登录。域名不会注销。
+3. 站点设置里的「评论权限 / 点赞权限」：关闭后，主站点击会弹出「会员操作」（随 cn/zh/en 切换）
+4. 藏家动态 → 编辑 →「管理评论」可分页增删改评论
+5. 拍品 / 新闻 / 动态 / 横幅：在后台上传真实内容
+6. 前台 `/{cn|zh|en}` 验证品牌与联系方式已生效

@@ -22,6 +22,14 @@ export default async function AdminDashboard() {
           欢迎回来！全局每日上浮：{stats.uplift}% · 前台约 5 分钟刷新估价 · 数据源：
           {stats.backend === "supabase" ? "Supabase" : "本地文件"}
         </p>
+        {stats.sitePublicEnabled === false && (
+          <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            主站前台已关闭，访客打开本域名看不到任何内容。
+            <Link href="/admin/settings" className="ml-2 font-medium underline">
+              去站点设置
+            </Link>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -83,7 +91,7 @@ export default async function AdminDashboard() {
             </li>
             <li>
               <Link href="/admin/settings" className="text-blue-700">
-                WhatsApp / Logo / 会员互动权限
+                WhatsApp / Logo / 主站前台开关 / 会员互动权限
               </Link>
             </li>
             <li>
