@@ -38,6 +38,7 @@ import type {
   PostRecord,
 } from "@/lib/cms/types";
 import { enrichProduct } from "@/lib/cms/pricing";
+import { locales } from "@/lib/i18n";
 import { isSupabaseConfigured } from "@/lib/cms/supabase";
 import {
   deleteComment,
@@ -53,9 +54,16 @@ function emptyL() {
   return { cn: "", zh: "", en: "" };
 }
 
-function revalidatePublic() {
+function revalidatePublic(productSlug?: string) {
   revalidatePath("/", "layout");
   revalidatePath("/admin", "layout");
+  for (const lang of locales) {
+    revalidatePath(`/${lang}`);
+    revalidatePath(`/${lang}/products`);
+    if (productSlug) {
+      revalidatePath(`/${lang}/products/${productSlug}`);
+    }
+  }
 }
 
 export async function loginAction(formData: FormData) {
@@ -241,7 +249,7 @@ export async function saveProductAction(formData: FormData) {
 
   if (!isSupabaseConfigured()) saveAdminStore(store);
   await syncProduct(p);
-  revalidatePublic();
+  revalidatePublic(p.slug);
   redirect(`/admin/products/${p.id}?saved=1`);
 }
 

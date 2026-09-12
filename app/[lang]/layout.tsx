@@ -11,7 +11,7 @@ export function generateStaticParams() {
   return locales.map((lang) => ({ lang }));
 }
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 /** Keep share previews (Telegram / WhatsApp) in sync with CMS brand settings */
 export async function generateMetadata({

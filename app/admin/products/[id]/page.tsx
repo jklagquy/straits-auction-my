@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { requireAdminPage } from "@/lib/admin-guard";
 import { deleteProductAction, saveProductAction } from "../../actions";
 import { loadAdminStore } from "@/lib/cms/repository";
-import { enrichProduct, formatMoney } from "@/lib/cms/pricing";
+import { enrichProduct, formatMoney, resolveUplift } from "@/lib/cms/pricing";
 import PricePreview from "./PricePreview";
 import MediaUploader from "@/components/admin/MediaUploader";
 import SavedBanner from "@/components/admin/SavedBanner";
@@ -27,6 +27,10 @@ export default async function AdminProductEditPage({
     product.manualCurrentPrice && product.manualCurrentPrice > 0
       ? product.manualCurrentPrice
       : live.displayPriceLow || original;
+  const usingOverride = product.upliftEnabled !== null;
+  const effective = resolveUplift(product, store.priceRules);
+  const orphanUplift =
+    !usingOverride && product.upliftValue != null && product.upliftValue !== effective.value;
 
   return (
     <div className="max-w-3xl space-y-6">
@@ -34,17 +38,34 @@ export default async function AdminProductEditPage({
       <SavedBanner saved={saved} />
       <div className="rounded-lg border bg-amber-50 p-4 text-sm space-y-1">
         <div>
-          原价：
+          原价（前台划线）：
           <span className="text-zinc-400 line-through ml-1">
-            RM {original.toLocaleString()}
+            {formatMoney(original, product.currency || "MYR", "cn")}
           </span>
         </div>
         <div>
-          当前前台价格：
-          <strong>
+          上浮起点（本页「当前价格」栏）：
+          {formatMoney(currentSeed, product.currency || "MYR", "cn")}
+        </div>
+        <div>
+          前台现价（起点 + 每日上浮，访客看到的是这个）：
+          <strong className="ml-1">
             {formatMoney(live.displayPriceLow, product.currency || "MYR", "cn")}
           </strong>
         </div>
+        <div className="text-zinc-600">
+          实际规则：
+          {effective.enabled
+            ? `${usingOverride ? "单品" : "全局"} ${effective.mode === "percent_daily" ? `每天 +${effective.value}%` : `每天 +RM ${effective.value}`}，自 ${effective.startAt} 起`
+            : "上浮已关闭，前台等于起点"}
+        </div>
+        {orphanUplift ? (
+          <div className="text-red-700">
+            库里有旧残留上浮值 {product.upliftValue}
+            %，但未勾选「使用单品上浮规则」，前台不会用它，正在用全局{" "}
+            {store.priceRules.defaultUpliftValue}%。
+          </div>
+        ) : null}
         <div>库存：{product.stockQuantity ?? 0}</div>
         <PricePreview productId={product.id} />
       </div>
@@ -103,13 +124,13 @@ export default async function AdminProductEditPage({
 
         <div className="grid sm:grid-cols-2 gap-4">
           <Field
-            label="原价 (RM)"
+            label="原价 / 划线价 (RM)"
             name="base_low"
             type="number"
             defaultValue={original ? String(original) : ""}
           />
           <Field
-            label="当前价格 / 最新价 (RM)"
+            label="上浮起点 (RM)，不是前台现价"
             name="current_price"
             type="number"
             defaultValue={currentSeed ? String(currentSeed) : ""}
@@ -122,20 +143,38 @@ export default async function AdminProductEditPage({
           defaultValue={String(product.stockQuantity ?? 0)}
         />
         <p className="text-xs text-zinc-500 -mt-2">
-          原价显示为划线价；当前价格可手动填写，并作为上浮计算起点。未填写库存时前台显示 0。
+          原价 = 前台划线。上浮关闭时，前台现价等于起点；上浮开启时 = 起点 × (1 + 日上浮% ×
+          天数)。未填库存时前台显示 0。
         </p>
 
         <Field label="上浮起始日" name="uplift_start" type="date" defaultValue={product.upliftStartAt} />
         <Field label="封顶价 (可选)" name="price_cap" type="number" defaultValue={product.priceCapHigh ? String(product.priceCapHigh) : ""} />
 
         <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" name="uplift_override" defaultChecked={product.upliftEnabled !== null} />
-          使用单品上浮规则（不勾选则继承全局）
+          <input type="checkbox" name="uplift_override" defaultChecked={usingOverride} />
+          使用单品上浮规则（不勾选则继承全局，下面三栏不生效）
         </label>
+        {!usingOverride ? (
+          <p className="text-xs text-amber-800">
+            当前继承全局：
+            {store.priceRules.defaultUpliftEnabled
+              ? `每天 +${store.priceRules.defaultUpliftValue}%（后台「价格规则」）`
+              : "全站上浮已关闭，前台等于起点"}
+            。若要单独开/关或改百分比，必须勾选「使用单品上浮规则」后再保存。
+          </p>
+        ) : null}
 
         <div className="grid sm:grid-cols-3 gap-4 pl-4 border-l">
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="uplift_enabled" defaultChecked={product.upliftEnabled ?? true} />
+            <input
+              type="checkbox"
+              name="uplift_enabled"
+              defaultChecked={
+                usingOverride
+                  ? product.upliftEnabled === true
+                  : store.priceRules.defaultUpliftEnabled
+              }
+            />
             启用上浮
           </label>
           <div>

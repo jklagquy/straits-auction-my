@@ -72,10 +72,23 @@ export default async function AdminProductsPage() {
                   </td>
                   <td className="p-3 whitespace-nowrap">
                     <div className="text-amber-800 font-medium">
-                      {formatMoney(e.displayPriceLow, e.currency || "MYR", "cn")}
+                      前台 {formatMoney(e.displayPriceLow, e.currency || "MYR", "cn")}
                     </div>
                     <div className="text-xs text-zinc-400">
-                      原价 RM {(p.basePriceLow || p.basePriceHigh).toLocaleString()}
+                      原价{" "}
+                      {formatMoney(
+                        p.basePriceLow || p.basePriceHigh,
+                        e.currency || "MYR",
+                        "cn"
+                      )}
+                      {" · "}起点{" "}
+                      {formatMoney(
+                        p.manualCurrentPrice && p.manualCurrentPrice > 0
+                          ? p.manualCurrentPrice
+                          : p.basePriceLow || p.basePriceHigh,
+                        e.currency || "MYR",
+                        "cn"
+                      )}
                       {" · "}库存 {p.stockQuantity ?? 0}
                     </div>
                   </td>

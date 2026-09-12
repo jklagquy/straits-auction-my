@@ -1,4 +1,5 @@
-import { enrichProduct } from "./pricing";
+import { unstable_noStore as noStore } from "next/cache";
+import { asTriBool, enrichProduct } from "./pricing";
 import { readStore, writeStore } from "./file-store";
 import { buildDefaultStore } from "./seed";
 import { readProductMetaFromRow } from "./stock";
@@ -95,19 +96,23 @@ function enrichAll(store: CmsStore): ProductRecord[] {
 /* ---------- public reads ---------- */
 
 export async function getPriceRules(): Promise<PriceRules> {
+  noStore();
+  const fallback = ensureStore().priceRules;
   if (isSupabaseConfigured()) {
     const sb = createServiceClient();
     const { data } = await sb.from("price_rules").select("*").eq("id", 1).single();
     if (data) {
       return {
-        defaultUpliftEnabled: data.default_uplift_enabled,
+        defaultUpliftEnabled: asTriBool(data.default_uplift_enabled) === true,
         defaultUpliftMode: data.default_uplift_mode,
         defaultUpliftValue: Number(data.default_uplift_value),
         currency: data.currency,
       };
     }
+    // Do not inherit seed "uplift ON" when the live row is missing.
+    return { ...fallback, defaultUpliftEnabled: false };
   }
-  return ensureStore().priceRules;
+  return fallback;
 }
 
 function mapSiteSettingsRow(data: Record<string, unknown>): SiteSettings {
@@ -157,6 +162,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
 }
 
 export async function getProducts(): Promise<Product[]> {
+  noStore();
   const rules = await getPriceRules();
   if (isSupabaseConfigured()) {
     const sb = createServiceClient();
@@ -674,7 +680,7 @@ function mapProductRow(row: Record<string, unknown>): Omit<ProductRecord, "displ
     manualCurrentPrice,
     priceTrail,
     currency: String(row.currency || "MYR"),
-    upliftEnabled: row.uplift_enabled as boolean | null,
+    upliftEnabled: asTriBool(row.uplift_enabled),
     upliftMode: row.uplift_mode as ProductRecord["upliftMode"],
     upliftValue: row.uplift_value != null ? Number(row.uplift_value) : null,
     upliftStartAt: String(row.uplift_start_at).slice(0, 10),

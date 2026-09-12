@@ -19,6 +19,18 @@ export function daysSince(startIso: string, now = new Date()): number {
   return Math.max(0, Math.floor((today.getTime() - start.getTime()) / 86400000));
 }
 
+/** Postgres/json may send t/f or "false"; only explicit true turns uplift on. */
+export function asTriBool(value: unknown): boolean | null {
+  if (value === null || value === undefined || value === "") return null;
+  if (value === true || value === 1 || value === "1" || value === "t" || value === "true") {
+    return true;
+  }
+  if (value === false || value === 0 || value === "0" || value === "f" || value === "false") {
+    return false;
+  }
+  return null;
+}
+
 export function resolveUplift(
   product: Pick<
     ProductRecord,
@@ -27,7 +39,7 @@ export function resolveUplift(
   rules: PriceRules
 ): { enabled: boolean; mode: UpliftMode; value: number; startAt: string } {
   const enabled =
-    product.upliftEnabled ?? rules.defaultUpliftEnabled;
+    asTriBool(product.upliftEnabled) ?? asTriBool(rules.defaultUpliftEnabled) === true;
   const mode = product.upliftMode ?? rules.defaultUpliftMode;
   const value = product.upliftValue ?? rules.defaultUpliftValue;
   return { enabled, mode, value, startAt: product.upliftStartAt };
@@ -90,7 +102,10 @@ export function formatMoney(
 ): string {
   if (!Number.isFinite(amount) || amount <= 0) return comingSoonLabel(lang);
   const sym = currency === "MYR" ? "RM" : currency;
-  return `${sym} ${amount.toLocaleString("en-MY", { maximumFractionDigits: 0 })}`;
+  // Fixed en-US grouping: 12537 → "12,537". Some runtimes' en-MY/zh
+  // grouping rendered as "12,537" / "13,9209" and looked "out of sync".
+  const n = Math.round(Number(amount));
+  return `${sym} ${n.toLocaleString("en-US")}`;
 }
 
 export function formatEstimate(

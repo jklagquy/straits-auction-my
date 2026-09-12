@@ -3,7 +3,7 @@ import { PageBanner, ProductCard } from "@/components/ui";
 import { getProducts } from "@/lib/cms/repository";
 import { dict, isLocale, type Locale } from "@/lib/i18n";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 export default async function ProductsPage({
   params,

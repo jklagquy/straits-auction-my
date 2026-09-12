@@ -1,6 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async headers() {
+    return [
+      {
+        source: "/:lang/products/:path*",
+        headers: [
+          { key: "Cache-Control", value: "private, no-store, must-revalidate" },
+        ],
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {

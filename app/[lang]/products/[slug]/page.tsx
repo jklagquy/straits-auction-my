@@ -11,7 +11,7 @@ import {
 } from "@/lib/cms/repository";
 import { dict, isLocale, tr, type Locale } from "@/lib/i18n";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 export async function generateStaticParams() {
   const products = await getProducts();

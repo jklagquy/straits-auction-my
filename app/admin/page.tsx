@@ -19,7 +19,7 @@ export default async function AdminDashboard() {
       <div>
         <h1 className="text-2xl font-bold">控制台</h1>
         <p className="mt-1 text-sm text-zinc-500">
-          欢迎回来！全局每日上浮：{stats.uplift}% · 前台约 5 分钟刷新估价 · 数据源：
+          欢迎回来！全局每日上浮：{stats.uplift}% · 前台现价每次打开实时计算 · 数据源：
           {stats.backend === "supabase" ? "Supabase" : "本地文件"}
         </p>
         {stats.sitePublicEnabled === false && (
